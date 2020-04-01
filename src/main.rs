@@ -74,22 +74,12 @@ impl Snake {
     }
 
     //Step function (must add something where we make sure that the next snake will follow the one before it)
-    fn update(&mut self, num: u8, last_direction: Direction) {
-        if num == 0 {
-            match self.dir {
-                Direction::Left => self.pos_x = ((self.pos_x-1)%(X_MAX+1)+(X_MAX+1))%(X_MAX+1),      //Weird remainder calculations to change the % operator into modulus so we can leave from one side of the screen and enter on another side
-                Direction::Right => self.pos_x = ((self.pos_x+1)%(X_MAX+1)+(X_MAX+1))%(X_MAX+1),
-                Direction::Up => self.pos_y = ((self.pos_y-1)%(Y_MAX+1)+(Y_MAX+1))%(Y_MAX+1),
-                Direction::Down => self.pos_y = ((self.pos_y+1)%(Y_MAX+1)+(Y_MAX+1))%(Y_MAX+1),
-            }
-        }
-        else {
-            match last_direction {
-                Direction::Left => self.pos_x = ((self.pos_x-1)%(X_MAX+1)+(X_MAX+1))%(X_MAX+1),      //Weird remainder calculations to change the % operator into modulus so we can leave from one side of the screen and enter on another side
-                Direction::Right => self.pos_x = ((self.pos_x+1)%(X_MAX+1)+(X_MAX+1))%(X_MAX+1),
-                Direction::Up => self.pos_y = ((self.pos_y-1)%(Y_MAX+1)+(Y_MAX+1))%(Y_MAX+1),
-                Direction::Down => self.pos_y = ((self.pos_y+1)%(Y_MAX+1)+(Y_MAX+1))%(Y_MAX+1),
-            }
+    fn update(&mut self) {
+        match self.dir {
+            Direction::Left => self.pos_x = ((self.pos_x-1)%(X_MAX+1)+(X_MAX+1))%(X_MAX+1),      //Weird remainder calculations to change the % operator into modulus so we can leave from one side of the screen and enter on another side
+            Direction::Right => self.pos_x = ((self.pos_x+1)%(X_MAX+1)+(X_MAX+1))%(X_MAX+1),
+            Direction::Up => self.pos_y = ((self.pos_y-1)%(Y_MAX+1)+(Y_MAX+1))%(Y_MAX+1),
+            Direction::Down => self.pos_y = ((self.pos_y+1)%(Y_MAX+1)+(Y_MAX+1))%(Y_MAX+1),
         }
     }
 }
@@ -168,27 +158,24 @@ impl Game {
     }
 
     fn update(&mut self) {
+        let vector_length = self.vector.len();
         //Takes a step forward
-        let temp_direction = self.vector[0].last_dir.clone();
-        self.vector[0].update(0 as u8, temp_direction);
-        for i in 1..self.vector.len() {
-            let temp_dir = self.vector[i].dir.clone();
-            self.vector[i].update(i as u8, temp_dir);
-
-            self.vector[i].last_dir = self.vector[i].dir.clone();
-            self.vector[i].dir = self.vector[i-1].last_dir.clone();
+        for i in 0..vector_length {
+            if i != vector_length-1 && vector_length > 1{
+                self.vector[vector_length-1-i].dir = self.vector[vector_length-i-2].last_dir.clone();
+            }
+            self.vector[vector_length-1-i].update();
         }
-        self.vector[0].last_dir = self.vector[0].dir.clone();
+
+        //Set the last direction as the current direction and move on.
+        for i in 0..vector_length {
+            self.vector[i].last_dir = self.vector[i].dir.clone();
+        }
 
         //Eat apple?
          if self.vector[0].pos_x == self.apple.pos_x && self.vector[0].pos_y == self.apple.pos_y {
             self.grow(self.vector.len() as u8);
             self.apple.update();
-        }
-
-        //Configuring the direction of the following snakes
-        for i in 1..self.vector.len() {
-            self.vector[i].dir = self.vector[i-1].dir.clone();
         }
 
       //Include if crash into self
@@ -201,7 +188,6 @@ impl Game {
 
     //The function that is called when a button is pressed, changing the direction of the snake
     fn pressed(&mut self, btn: &Button) {
-//        self.vector[0].last_dir = self.vector[0].dir.clone();
         self.vector[0].dir = match btn {
             &Button::Keyboard(Key::Up)
                 if self.vector[0].dir != Direction::Down => Direction::Up,
@@ -265,10 +251,6 @@ fn main() {
         //If the event is an update we wil do something. u is underscored to signify that we never actually use the variable u
         if let Some(_u) = e.update_args() {
             game.update();
-
-
-
-
 
 
             //Change speed of snake depending on how long the snake is.            game.updates_per_second = game.snake.length*5;
