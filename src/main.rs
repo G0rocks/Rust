@@ -33,6 +33,7 @@ use piston::input::*;
 use glutin_window::GlutinWindow;
 use opengl_graphics::{GlGraphics, OpenGL};
 use rand::Rng;
+use std::vec::Vec;
 
 //Something some youtuber said would help with making the snake grow. Will look into:
 //use std::collections::LinkedList;
@@ -45,67 +46,22 @@ const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
+//Enum for directions
 #[derive(Clone, PartialEq)]
 enum Direction {
     Right, Left, Up, Down
 }
 
-//This is the game struct
-struct Game {
-    gl: GlGraphics,
-    snake: Snake,
-    apple: Apple,
-    updates_per_second: u64,
-}
-
-impl Game {
-    fn render(&mut self, arg: &RenderArgs) {
-        self.gl.draw(arg.viewport(), |_c, gl| {
-            graphics::clear(BLACK,gl);
-        });
-
-        self.apple.render(arg);
-        self.snake.render(arg);
-    }
-
-    fn update(&mut self) {
-        self.snake.update();
-
-        //Eat apple?
-        if self.snake.pos_x == self.apple.pos_x && self.snake.pos_y == self.apple.pos_y {
-            self.snake.grow();
-            self.apple.update();
-        }
-    }
-
-    //The function that is called when a button is pressed, changing the direction of the snake
-    fn pressed(&mut self, btn: &Button) {
-        let last_direction = self.snake.dir.clone();
-
-        self.snake.dir = match btn {
-            &Button::Keyboard(Key::Up)
-                if last_direction != Direction::Down => Direction::Up,
-            &Button::Keyboard(Key::Down)
-                if last_direction != Direction::Up => Direction::Down,
-            &Button::Keyboard(Key::Left)
-                if last_direction != Direction::Right => Direction::Left,
-            &Button::Keyboard(Key::Right)
-                if last_direction != Direction::Left => Direction::Right,
-
-                //We default to the last direction so if somebody accidentally presses a different button, nothing happens
-               _ => last_direction
-            }
-    }
-}
-
+//Snake struct. Is really just a rectangle that has a direction and moves. The length is not important anymore. Will change it to only refer to the vector
 struct Snake {
     gl: GlGraphics,
     pos_x: i32,
     pos_y: i32,
     dir: Direction,
-    length: u64,
+    last_dir: Direction,
 }
 
+//Snake implimentation. Has all the functions that the Snake type can use.
 impl Snake {
     pub fn render(&mut self, args: &RenderArgs) {
         let square = graphics::rectangle::square((self.pos_x*20) as f64, (self.pos_y*20) as f64, 20_f64);
@@ -117,21 +73,24 @@ impl Snake {
         });
     }
 
-    //Step function
-    //Maximum position in window for pos_x is 31 and maximum position in window for pos_y is 23
-    fn update(&mut self) {
-        match self.dir {
-            Direction::Left => self.pos_x = ((self.pos_x-1)%(X_MAX+1)+(X_MAX+1))%(X_MAX+1),      //Weird remainder calculations to change the % operator into modulus so we can leave from one side of the screen and enter on another side
-            Direction::Right => self.pos_x = ((self.pos_x+1)%(X_MAX+1)+(X_MAX+1))%(X_MAX+1),
-            Direction::Up => self.pos_y = ((self.pos_y-1)%(Y_MAX+1)+(Y_MAX+1))%(Y_MAX+1),
-            Direction::Down => self.pos_y = ((self.pos_y+1)%(Y_MAX+1)+(Y_MAX+1))%(Y_MAX+1),
+    //Step function (must add something where we make sure that the next snake will follow the one before it)
+    fn update(&mut self, num: u8, last_direction: Direction) {
+        if num == 0 {
+            match self.dir {
+                Direction::Left => self.pos_x = ((self.pos_x-1)%(X_MAX+1)+(X_MAX+1))%(X_MAX+1),      //Weird remainder calculations to change the % operator into modulus so we can leave from one side of the screen and enter on another side
+                Direction::Right => self.pos_x = ((self.pos_x+1)%(X_MAX+1)+(X_MAX+1))%(X_MAX+1),
+                Direction::Up => self.pos_y = ((self.pos_y-1)%(Y_MAX+1)+(Y_MAX+1))%(Y_MAX+1),
+                Direction::Down => self.pos_y = ((self.pos_y+1)%(Y_MAX+1)+(Y_MAX+1))%(Y_MAX+1),
+            }
         }
-    }
-
-    //Growing snake
-    fn grow (&mut self) {
-        self.length += 1;
-        println!("Snake length is {}", self.length);
+        else {
+            match last_direction {
+                Direction::Left => self.pos_x = ((self.pos_x-1)%(X_MAX+1)+(X_MAX+1))%(X_MAX+1),      //Weird remainder calculations to change the % operator into modulus so we can leave from one side of the screen and enter on another side
+                Direction::Right => self.pos_x = ((self.pos_x+1)%(X_MAX+1)+(X_MAX+1))%(X_MAX+1),
+                Direction::Up => self.pos_y = ((self.pos_y-1)%(Y_MAX+1)+(Y_MAX+1))%(Y_MAX+1),
+                Direction::Down => self.pos_y = ((self.pos_y+1)%(Y_MAX+1)+(Y_MAX+1))%(Y_MAX+1),
+            }
+        }
     }
 }
 
@@ -161,6 +120,104 @@ impl Apple {
     }
 }
 
+//This is the game struct
+struct Game {
+    gl: GlGraphics,
+    vector: Vec<Snake>,
+    apple: Apple,
+    updates_per_second: u64,
+}
+
+impl Game {
+    fn render(&mut self, arg: &RenderArgs) {
+        self.gl.draw(arg.viewport(), |_c, gl| {
+            graphics::clear(BLACK,gl);
+        });
+
+        self.apple.render(arg);
+
+        for i in 0..self.vector.len() {
+            self.vector[i].render(arg);
+        }
+    }
+
+    //GAME OVER function
+    fn over(&mut self) {
+        //println!("The game is over :P");
+    }
+
+    //Growing snake (possibly need to add something where we talk about the directions). num is the length of the Snake_vector
+    fn grow (&mut self, num: u8) {
+        let mut new_snake_pos_x = self.vector[self.vector.len()-1].pos_x;
+        let mut new_snake_pos_y = self.vector[self.vector.len()-1].pos_y;
+
+        //Depending on the last snakes direction, change the new snakes starting position
+        match self.vector[(num as usize)-1].dir.clone() {
+            Direction::Left => new_snake_pos_x = ((new_snake_pos_x+1)%(X_MAX+1)+(X_MAX+1))%(X_MAX+1),      //Weird remainder calculations to change the % operator into modulus so we can leave from one side of the screen and enter on another side
+            Direction::Right => new_snake_pos_x = ((new_snake_pos_x-1)%(X_MAX+1)+(X_MAX+1))%(X_MAX+1),
+            Direction::Up => new_snake_pos_y = ((new_snake_pos_y+1)%(Y_MAX+1)+(Y_MAX+1))%(Y_MAX+1),
+            Direction::Down => new_snake_pos_y = ((new_snake_pos_y-1)%(Y_MAX+1)+(Y_MAX+1))%(Y_MAX+1),
+        }
+        
+        let new_snake = Snake { gl: GlGraphics::new(OpenGL::V3_2),
+                                pos_x: new_snake_pos_x,
+                                pos_y: new_snake_pos_y,
+                                dir: self.vector[self.vector.len()-1].last_dir.clone(),
+                                last_dir: self.vector[self.vector.len()-1].last_dir.clone()};
+        self.vector.push(new_snake)
+    }
+
+    fn update(&mut self) {
+        //Takes a step forward
+        let temp_direction = self.vector[0].last_dir.clone();
+        self.vector[0].update(0 as u8, temp_direction);
+        for i in 1..self.vector.len() {
+            let temp_dir = self.vector[i].dir.clone();
+            self.vector[i].update(i as u8, temp_dir);
+
+            self.vector[i].last_dir = self.vector[i].dir.clone();
+            self.vector[i].dir = self.vector[i-1].last_dir.clone();
+        }
+        self.vector[0].last_dir = self.vector[0].dir.clone();
+
+        //Eat apple?
+         if self.vector[0].pos_x == self.apple.pos_x && self.vector[0].pos_y == self.apple.pos_y {
+            self.grow(self.vector.len() as u8);
+            self.apple.update();
+        }
+
+        //Configuring the direction of the following snakes
+        for i in 1..self.vector.len() {
+            self.vector[i].dir = self.vector[i-1].dir.clone();
+        }
+
+      //Include if crash into self
+        for i in 0..self.vector.len() {
+            if self.vector[0].pos_x == self.vector[i].pos_x && self.vector[0].pos_y == self.vector[i].pos_y {
+                self.over();
+            }
+        }
+    }
+
+    //The function that is called when a button is pressed, changing the direction of the snake
+    fn pressed(&mut self, btn: &Button) {
+//        self.vector[0].last_dir = self.vector[0].dir.clone();
+        self.vector[0].dir = match btn {
+            &Button::Keyboard(Key::Up)
+                if self.vector[0].dir != Direction::Down => Direction::Up,
+            &Button::Keyboard(Key::Down)
+                if self.vector[0].dir != Direction::Up => Direction::Down,
+            &Button::Keyboard(Key::Left)
+                if self.vector[0].dir != Direction::Right => Direction::Left,
+            &Button::Keyboard(Key::Right)
+                if self.vector[0].dir != Direction::Left => Direction::Right,
+
+                //We default to the last direction so if somebody accidentally presses a different button, nothing happens
+               _ => self.vector[0].dir.clone()
+        }
+    }
+}
+
 /*
 *****************************************************************************************************************************
 Main function
@@ -169,11 +226,7 @@ fn main() {
     //random
     let mut rng = rand::thread_rng();
 
-    //Variable declaration
-    
-        //Boolean game over?
-    
-    //Stuff from random youtube video: https://www.youtube.com/watch?v=HCwMb0KslX8
+    //No idea what this is or what it does but the code doesn't work withou it :P
     let opengl = OpenGL::V3_2;
 
     //WindoSettings::new{Title T (must be string), Size S (must be array, [width,height])}
@@ -185,34 +238,41 @@ fn main() {
     .exit_on_esc(true)
     .build()
     .unwrap();
-
-    let mut snake_vec: Vec<Snake> = Vec::new();
-    snake_vec.push(Snake {gl: GlGraphics::new(opengl), pos_x: 10, pos_y: 10, dir: Direction::Right, length: 1});
+    
+    //Declaring snake vector. This vector will contain a data type Snake. Which is a cube. For each apple the player gets, we add 1 Snake (type) to this vector
+    let mut snake_vector: Vec<Snake> = Vec::new();
+    let snake1 = Snake {gl: GlGraphics::new(opengl), pos_x: 10, pos_y: 10, dir: Direction::Right, last_dir: Direction::Right};
+    snake_vector.push(snake1);
 
     //Here the core game resides
     let mut game = Game {
         gl: GlGraphics::new(opengl),
-//        snake: snake_vec[0],
-        snake: Snake {gl: GlGraphics::new(opengl), pos_x: 10, pos_y: 10, dir: Direction::Right, length: 1},
+        vector: snake_vector,
         apple: Apple {gl: GlGraphics::new(opengl), pos_x: rng.gen_range(1,X_MAX), pos_y: rng.gen_range(1, Y_MAX)},
         updates_per_second: 5,
     };
-
 
     //Cool screen with "GAME STARTING" + "3" + "2" + "1" "BEGIN"
 
     //Loop - While Game == notover && make sure the runtime of the loop is controlled by the speed
     let mut events = Events::new(EventSettings::new()).ups(game.updates_per_second);
     while let Some(e) = events.next(&mut window) {
-
-        if let Some(r) = e.render_args() {           //If the event is a render event we will do something.
+        //If the event is a render event we will do something. Must render before the update event
+        if let Some(r) = e.render_args() {
             game.render(&r);
         }
 
-        if let Some(u) = e.update_args() {             //If the event is an update we wil do something.
+        //If the event is an update we wil do something. u is underscored to signify that we never actually use the variable u
+        if let Some(_u) = e.update_args() {
             game.update();
 
+
+
+
+
+
             //Change speed of snake depending on how long the snake is.            game.updates_per_second = game.snake.length*5;
+
         }
 
         //Change direction when button is pressed event call
@@ -221,11 +281,7 @@ fn main() {
                 game.pressed(&k.button);
             }
         }
-  
-            //Include if apple was eaten
     
-            //Include if crash into self
-
         //Check if game is over to break loop
 
     //When game is over make a cool ASCII "artwork" with a GAME OVER or a YOU WON
