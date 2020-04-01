@@ -35,10 +35,6 @@ use opengl_graphics::{GlGraphics, OpenGL};
 use rand::Rng;
 use std::vec::Vec;
 
-//Something some youtuber said would help with making the snake grow. Will look into:
-//use std::collections::LinkedList;
-
-
 //Declaring constants
 const X_MAX: i32 = 31;
 const Y_MAX: i32 = 23;
@@ -116,6 +112,7 @@ struct Game {
     vector: Vec<Snake>,
     apple: Apple,
     updates_per_second: u64,
+    game_over: bool,
 }
 
 impl Game {
@@ -131,11 +128,23 @@ impl Game {
         }
     }
 
-    //GAME OVER function
-    fn over(&mut self) {
-        //println!("The game is over :P");
+    //This is supposed to be an end game message:
+    /*
+    fn game_over_render(&mut self, arg: &RenderArgs) {
+        self.gl.draw(arg.viewport(), |_c, gl| {
+            graphics::clear(BLACK,gl);
+        });
+        
+        let game_over_text = "GAME OVER";
+        let mut character_cache_C = "";
+        
+        self.gl.draw(arg.viewport(), |c,gl|{
+            let transform = c.transform;
+            graphics::text(WHITE, 18, &game_over_text, &mut character_cache_C, transform: math::Matrix2d, g: &mut G);
+        });
     }
-
+    */
+    
     //Growing snake (possibly need to add something where we talk about the directions). num is the length of the Snake_vector
     fn grow (&mut self, num: u8) {
         let mut new_snake_pos_x = self.vector[self.vector.len()-1].pos_x;
@@ -173,15 +182,25 @@ impl Game {
         }
 
         //Eat apple?
-         if self.vector[0].pos_x == self.apple.pos_x && self.vector[0].pos_y == self.apple.pos_y {
+        if self.vector[0].pos_x == self.apple.pos_x && self.vector[0].pos_y == self.apple.pos_y {
             self.grow(self.vector.len() as u8);
-            self.apple.update();
+            let mut i = 0;
+            while i < vector_length {
+                //We check if the apple is inside the snake and regenerate it if so.
+                if self.apple.pos_x == self.vector[i].pos_x && self.apple.pos_y == self.vector[i].pos_y {
+                    self.apple.update();
+                    i = 0;
+                }
+                i += 1;
+            }
         }
 
       //Include if crash into self
-        for i in 0..self.vector.len() {
-            if self.vector[0].pos_x == self.vector[i].pos_x && self.vector[0].pos_y == self.vector[i].pos_y {
-                self.over();
+        if vector_length > 4 {
+            for i in 4..vector_length {
+                if self.vector[0].pos_x == self.vector[i].pos_x && self.vector[0].pos_y == self.vector[i].pos_y {
+                    self.game_over = true;
+                }
             }
         }
     }
@@ -190,13 +209,13 @@ impl Game {
     fn pressed(&mut self, btn: &Button) {
         self.vector[0].dir = match btn {
             &Button::Keyboard(Key::Up)
-                if self.vector[0].dir != Direction::Down => Direction::Up,
+                if self.vector[0].last_dir != Direction::Down => Direction::Up,
             &Button::Keyboard(Key::Down)
-                if self.vector[0].dir != Direction::Up => Direction::Down,
+                if self.vector[0].last_dir != Direction::Up => Direction::Down,
             &Button::Keyboard(Key::Left)
-                if self.vector[0].dir != Direction::Right => Direction::Left,
+                if self.vector[0].last_dir != Direction::Right => Direction::Left,
             &Button::Keyboard(Key::Right)
-                if self.vector[0].dir != Direction::Left => Direction::Right,
+                if self.vector[0].last_dir != Direction::Left => Direction::Right,
 
                 //We default to the last direction so if somebody accidentally presses a different button, nothing happens
                _ => self.vector[0].dir.clone()
@@ -235,10 +254,12 @@ fn main() {
         gl: GlGraphics::new(opengl),
         vector: snake_vector,
         apple: Apple {gl: GlGraphics::new(opengl), pos_x: rng.gen_range(1,X_MAX), pos_y: rng.gen_range(1, Y_MAX)},
-        updates_per_second: 5,
+        updates_per_second: 15,
+        game_over: false,
     };
 
     //Cool screen with "GAME STARTING" + "3" + "2" + "1" "BEGIN"
+
 
     //Loop - While Game == notover && make sure the runtime of the loop is controlled by the speed
     let mut events = Events::new(EventSettings::new()).ups(game.updates_per_second);
@@ -265,11 +286,15 @@ fn main() {
         }
     
         //Check if game is over to break loop
-
-    //When game is over make a cool ASCII "artwork" with a GAME OVER or a YOU WON
-
-//    println!("(X,Y) = ({},{})",game.snake.pos_x,game.snake.pos_y);
+        if game.game_over {
+            break;
+        }
     }
 
-  //  println!("If this prints out, that means the program is working :)");
+    //Print score
+    println!("\nYour score was: {}", game.vector.len());
+    //When game is over make a cool ASCII "artwork" with a GAME OVER or a YOU WON.
+   // if let Some(j) = e.render_args() {
+    //    game.game_over_render(&j);
+   // }
 }
