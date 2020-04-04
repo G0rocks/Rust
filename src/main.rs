@@ -34,6 +34,8 @@ use glutin_window::GlutinWindow;
 use opengl_graphics::{GlGraphics, OpenGL};
 use rand::Rng;
 use std::vec::Vec;
+use std::io;
+use std::io::prelude::*;
 
 //Declaring constants
 const X_MAX: i32 = 31;
@@ -230,6 +232,7 @@ Main function
 fn main() {
     //random
     let mut rng = rand::thread_rng();
+    let mut total_updates = 0;
 
     //No idea what this is or what it does but the code doesn't work withou it :P
     let opengl = OpenGL::V3_2;
@@ -264,6 +267,7 @@ fn main() {
     //Loop - While Game == notover && make sure the runtime of the loop is controlled by the speed
     let mut events = Events::new(EventSettings::new()).ups(game.updates_per_second);
     while let Some(e) = events.next(&mut window) {
+
         //If the event is a render event we will do something. Must render before the update event
         if let Some(r) = e.render_args() {
             game.render(&r);
@@ -271,8 +275,8 @@ fn main() {
 
         //If the event is an update we wil do something. u is underscored to signify that we never actually use the variable u
         if let Some(_u) = e.update_args() {
+            total_updates += 1;
             game.update();
-
 
             //Change speed of snake depending on how long the snake is.            game.updates_per_second = game.snake.length*5;
 
@@ -285,7 +289,7 @@ fn main() {
             }
         }
     
-        //Check if game is over to break loop
+        //Check if game is over to close the window and break the loop
         if game.game_over {
             break;
         }
@@ -293,8 +297,25 @@ fn main() {
 
     //Print score
     println!("\nYour score was: {}", game.vector.len());
+
+    //Print time
+    let time = total_updates/game.updates_per_second;
+    println!("\nYour time was: {}", time);
     //When game is over make a cool ASCII "artwork" with a GAME OVER or a YOU WON.
    // if let Some(j) = e.render_args() {
     //    game.game_over_render(&j);
    // }
+
+    //Press any key to quit
+    {
+        let mut stdin = io::stdin();
+        let mut stdout = io::stdout();
+    
+        // We want the cursor to stay at the end of the line, so we print without a newline and flush manually.
+        write!(stdout, "Press enter to quit").unwrap();
+        stdout.flush().unwrap();
+    
+        // Read a single byte and discard
+        let _ = stdin.read(&mut [0u8]).unwrap();
+    }
 }
