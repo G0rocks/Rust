@@ -37,9 +37,10 @@ fn main() {
 
     //Parsing the user input to integer variables. We trim the end to get rid of the newline character
     x = x_string.trim().parse().unwrap();
-    y = x_string.trim().parse().unwrap();
+    y = y_string.trim().parse().unwrap();
 
-    print!("x: {}, y: {}",x, y);
+    //print!("x_string: {}y_string: {}", x_string, y_string);
+    //print!("x: {}, y: {}",x, y);
 
     if x > 0 {
         if y > 0 {
