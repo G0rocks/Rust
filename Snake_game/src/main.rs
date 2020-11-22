@@ -25,6 +25,7 @@ extern crate graphics;
 extern crate opengl_graphics;
 extern crate piston;
 extern crate rand;
+extern crate find_folder;
 
 //Used dependencies
 use piston::window::WindowSettings;
@@ -36,6 +37,11 @@ use rand::Rng;
 use std::vec::Vec;
 use std::io;
 use std::io::prelude::*;
+use std::path::Path;
+use std::ffi::OsStr;
+use graphics::text::*;
+use find_folder::Search;
+
 
 //Declaring constants
 const X_MAX: i32 = 31;
@@ -225,16 +231,51 @@ impl Game {
     }
 }
 
+//Press enter to continue
+fn enter_to_continue () {
+    let mut stdin = io::stdin();
+    let mut stdout = io::stdout();
+
+    // We want the cursor to stay at the end of the line, so we print without a newline and flush manually.
+    write!(stdout, "Press enter to quit").unwrap();
+    stdout.flush().unwrap();
+
+    // Read a single byte and discard
+    let _ = stdin.read(&mut [0u8]).unwrap();
+}
+
+/*
+*****************************************************************************************************************************
+Alphabet yaaaaaay
+*/
+//This is the game struct
+struct letter_A {
+    gl: GlGraphics,
+}
+
+impl letter_A {
+    fn render(&mut self, arg: &RenderArgs) {
+        self.gl.draw(arg.viewport(), |_c, gl| {
+            graphics::clear(WHITE,gl);
+        });
+    }
+}
+
+
 /*
 *****************************************************************************************************************************
 Main function
 */
 fn main() {
+    //Stuff we need for rendering text on the generated window
+    let font_name = "LCD_SOLID.ttf";
+    let font_path = Path::new("C:USERS/HULDA/APPDATA/MICROSOFT/WINDOWS");
+
     //random
     let mut rng = rand::thread_rng();
     let mut total_updates = 0;
 
-    //No idea what this is or what it does but the code doesn't work withou it :P
+    //No idea what this is or what it does but the code doesn't work withou it :P It has something to do with drawing things
     let opengl = OpenGL::V3_2;
 
     //WindoSettings::new{Title T (must be string), Size S (must be array, [width,height])}
@@ -257,12 +298,44 @@ fn main() {
         gl: GlGraphics::new(opengl),
         vector: snake_vector,
         apple: Apple {gl: GlGraphics::new(opengl), pos_x: rng.gen_range(1,X_MAX), pos_y: rng.gen_range(1, Y_MAX)},
-        updates_per_second: 15,
+        updates_per_second: 12,
         game_over: false,
     };
 
-    //Cool screen with "GAME STARTING" + "3" + "2" + "1" "BEGIN"
+    //Write a big title that says SNAKE, a small sub title that says "A cover game by Huldar" and a middle sized "press enter to start" with "<" and ">" blinking around it.
+    
 
+    //Press enter to start
+    /*
+    let start_text = Text{color: WHITE,font_size: 10, round: true};
+    let title_text = Text{color: WHITE,font_size: 30, round: true};
+    let sub_title_text = Text{color: WHITE,font_size: 5, round: true};
+    let start_string = "Press enter to start";
+    let title_string = "SNAKE";
+    let sub_title_string = "A cover game by Huldar";
+    let assets = find_folder::check_dir("FONTS", font_path);
+    let ref font = assets.join(&font_name);
+    let mut C = glutin_window::Glyphs::new(font, factory).unwrap();
+    start_text.draw(&start_string,&mut c, draw_state: &DrawState, transform: Matrix2d, g: &mut G);
+
+    while let Some(e) = window.next() {
+        window.draw_2d(&e, |c, g| {
+            let transform = c.transform.trans(10.0, 100.0);
+            // Set a white background
+            clear([1.0, 1.0, 1.0, 1.0], g);
+            text::Text::new_color([0.0, 0.0, 0.0, 1.0], 32).draw(
+                hostname_str,
+                &mut glyphs,
+                &c.draw_state,
+                transform, g
+            );
+        });
+    }
+    */
+
+    //enter_to_continue();
+
+    //Cool screen with "GAME STARTING" + "3" + "2" + "1" "BEGIN"
 
     //Loop - While Game == notover && make sure the runtime of the loop is controlled by the speed
     let mut events = Events::new(EventSettings::new()).ups(game.updates_per_second);
@@ -291,6 +364,7 @@ fn main() {
     
         //Check if game is over to close the window and break the loop
         if game.game_over {
+            //window::WindoSettings.set_should_close(true);
             break;
         }
     }
@@ -306,16 +380,6 @@ fn main() {
     //    game.game_over_render(&j);
    // }
 
-    //Press any key to quit
-    {
-        let mut stdin = io::stdin();
-        let mut stdout = io::stdout();
-    
-        // We want the cursor to stay at the end of the line, so we print without a newline and flush manually.
-        write!(stdout, "Press enter to quit").unwrap();
-        stdout.flush().unwrap();
-    
-        // Read a single byte and discard
-        let _ = stdin.read(&mut [0u8]).unwrap();
-    }
+    //Press enter to continue 
+    enter_to_continue();
 }

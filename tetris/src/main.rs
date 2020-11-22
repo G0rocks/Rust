@@ -7,6 +7,8 @@ Upplýsingar:    Upphaflegi tetris leikurinn: https://is.wikipedia.org/wiki/Tetr
                 Reglurnar um hvað formin heita, liti, stigagjöf og fleira er hægt að finna á 
                 ensku síðunni á wikipedia um tetris.
                 Nöfnin á tetrimino-unum er að finna hér: https://tetris.fandom.com/wiki/Tetromino
+
+Next job: Make a window
 **************************************************************************************************************
 */
 
@@ -16,7 +18,7 @@ mod tetrimino;  //declare tetrimino.rs as a module. For use with creating tetrim
 //Declare crates
 extern crate rand;          //Random crate to generate random numbers to make the tetriminos appear randomly
 extern crate rodio;                //Used to play audio - The theme song
-
+use orbtk::prelude::*;                  //Used for creating and managing the game window
 
 fn main() {
     //Breytur (e. Variables) sem við munum þurfa að nota
@@ -29,7 +31,7 @@ fn main() {
     let tetris_zone_height:u8 = 40;                 //Specifies the height of the tetris zone in blocks - Standard is a 10x40 playing field (ref: https://tetris.fandom.com/wiki/Playfield#:~:text=The%20Tetris%20Guideline%20specifies%20a,the%20bottom%20of%20row%2021.)
     let tetris_zone_width:u8 = 10;                  //Specifies the width of the tetris zone in blocks
     let mut top_line:u8 = 0;                        //Tells us how high the currently placed blocks reach
-
+    
     // Stigagjöf (e. point system)
     /*
     Fyrir 1 línu
@@ -44,8 +46,9 @@ fn main() {
     1200 stig (fást fyrir seinna Tetris-ið)
     
     Þegar leikmaður leggur tetrimino niður með því að hard drop-pa
-    10 stig fyrir hvern reit sem tetrimino-inn féll niður um í hard drop-pinu
+    10 stig fyrir hvern reit sem tetrimino-inn féll niður um í hard dropp-inu
     */
+
     let points_1_line:u8 = 100;
     let points_2_lines:u8 = 250;
     let points_3_lines:u16 = 400;
@@ -53,20 +56,27 @@ fn main() {
     let points_double_tetris:u16 = 1200;
     let points_per_square_hard_drop:u8 = 10;
 
-    println!("Hello, world!");
-
     //Open a window with a press enter to start (and some other information?)
     
     //start playing music - Tetris ogg file includes the tetris theme song
     //If m or M button is pressed, mute/unmute music
 
     //Game loop - checks if the game is over
+    Application::new()
+    .window(|ctx| {
+        Window::new()
+            .title("Tetris - Cover by Huldar")
+            .position((100.0, 100.0))
+            .size(450.0, 580.0)
+            .build(ctx)
+    })
+    .run();
+
+
+    /*
     while functions::game_is_on(top_line ,tetris_zone_height) {
-
-
-
-
     }
+    */
 }
 
 
