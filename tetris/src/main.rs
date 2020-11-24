@@ -19,6 +19,10 @@ mod tetrimino;  //declare tetrimino.rs as a module. For use with creating tetrim
 extern crate rand;          //Random crate to generate random numbers to make the tetriminos appear randomly
 extern crate rodio;                //Used to play audio - The theme song
 use orbtk::prelude::*;                  //Used for creating and managing the game window
+use std::fs::File;          //Used to import the audio file for the music
+use std::io::BufReader;     //Used to read data from audio file
+use rodio::Source;          //Used to play audio
+use std::path::Path;        //Used to find the audio file
 
 fn main() {
     //Breytur (e. Variables) sem við munum þurfa að nota
@@ -44,24 +48,26 @@ fn main() {
     800 stig
     Fyrir að fá Tetris tvisvar í röð
     1200 stig (fást fyrir seinna Tetris-ið)
-    
     Þegar leikmaður leggur tetrimino niður með því að hard drop-pa
     10 stig fyrir hvern reit sem tetrimino-inn féll niður um í hard dropp-inu
     */
-
     let points_1_line:u8 = 100;
     let points_2_lines:u8 = 250;
     let points_3_lines:u16 = 400;
     let points_tetris:u16 = 800;
     let points_double_tetris:u16 = 1200;
     let points_per_square_hard_drop:u8 = 10;
-
-    //Open a window with a press enter to start (and some other information?)
     
     //start playing music - Tetris ogg file includes the tetris theme song
     //If m or M button is pressed, mute/unmute music
+    let path = Path::new("Tetris_theme.ogg");
+    let file = File::open("Tetris_theme.ogg").unwrap();
+    let source = rodio::Decoder::new(BufReader::new(file)).unwrap();
+    let device = rodio::default_output_device().unwrap();
+    rodio::play_raw(&device, source.convert_samples());
 
-    //Game loop - checks if the game is over
+    // Open a window
+    //Open a window with a press enter to start (and some other information?)
     Application::new()
     .window(|ctx| {
         Window::new()
@@ -71,6 +77,8 @@ fn main() {
             .build(ctx)
     })
     .run();
+
+    //Game loop - checks if the game is over
 
 
     /*
