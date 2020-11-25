@@ -78,6 +78,8 @@ fn main() {
     })
     .run();
 
+    //Add a loop which waits until enter is pressed to start the game
+
     //Game loop - checks if the game is over
 
 
