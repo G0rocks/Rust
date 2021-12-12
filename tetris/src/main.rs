@@ -12,8 +12,11 @@ Next job: Make a window
 **************************************************************************************************************
 */
 
+// Declare modules
 mod functions;  // declare functions.rs as a module
 mod tetrimino;  // declare tetrimino.rs as a module. For use with creating tetrimino related things
+mod game;       // The game module
+mod constants;  // global constants like colours and points and such
 
 // Declare crates
 extern crate rand;          // Random crate to generate random numbers to make the tetriminos appear randomly
@@ -25,74 +28,44 @@ extern crate piston;        // Used to manipulate the game window
 
 use piston::window::WindowSettings;
 use piston::event_loop::*;
-use piston::input::*;           // Used to get input from user
 use glutin_window::GlutinWindow;    // Piston gluten window, piston depenedency
 use opengl_graphics::{GlGraphics, OpenGL};  // Piston 2D graphics dependency
-use std::fs::File;          // Used to import the audio file for the music
-use std::io::BufReader;     // Used to read data from audio file
-use rodio::Source;          // Used to play audio
-use std::path::Path;        // Used to find the audio file
+//use std::fs::File;          // Used to import the audio file for the music
+//use std::io::BufReader;     // Used to read data from audio file
+//use rodio::Source;          // Used to play audio
+//use std::path::Path;        // Used to find the audio file
+use constants::*;           // Global constants, like colours and points
 
 fn main() {
-    #![windows_subsystem = "windows"]   // To avoid having a console pop up on windows release
+    println!("main function running");
 
     // Breytur (e. Variables) sem við munum þurfa að nota
-    let mut my_points:u32 = 0;                              // How many points the player has
-    let mut my_level:u8 = 0;                                // What is the current level -> The level determines the fall speed of tetriminos
-    let mut my_lines:u16 = 0;                               // How many lines has the player made disappear
-    let block_width:u8 = 20;                                // Number of pixels in the width of a square (squares are used to create tetriminos)
-    let block_height:u8 = 20;                               // Number of pixels in the height of a square (squares are used to create tetriminos)
-    let mut enter_to_play_has_been_pressed:bool = false;    // Specifies whether the game has started or not
+    let mut _my_points:u32 = 0;                              // How many points the player has
+    let mut _my_level:u8 = 0;                                // What is the current level -> The level determines the fall speed of tetriminos
+    let mut _my_lines:u16 = 0;                               // How many lines has the player made disappear
+    let _block_width:u8 = 20;                                // Number of pixels in the width of a square (squares are used to create tetriminos)
+    let _block_height:u8 = 20;                               // Number of pixels in the height of a square (squares are used to create tetriminos)
+    let mut _enter_to_play_has_been_pressed:bool = false;    // Specifies whether the game has started or not
     let tetris_zone_height:u8 = 40;                         // Specifies the height of the tetris zone in blocks - Standard is a 10x40 playing field (ref: https://tetris.fandom.com/wiki/Playfield#:~:text=The%20Tetris%20Guideline%20specifies%20a,the%20bottom%20of%20row%2021.)
-    let tetris_zone_width:u8 = 10;                          // Specifies the width of the tetris zone in blocks
+    let _tetris_zone_width:u8 = 10;                          // Specifies the width of the tetris zone in blocks
     let mut top_line:u8 = 0;                                // Tells us how high the currently placed blocks reach
-    
-    // Stigagjöf (e. point system)
-    /*
-    Fyrir 1 línu - 100 stig
-    Fyrir 2 línur - 250 stig
-    Fyrir 3 línur - 400 stig
-    Fyrir 4 línur (einnig þekkt sem Tetris) - 800 stig
-    Fyrir að fá Tetris tvisvar í röð - 1200 stig (fást fyrir seinna Tetris-ið)
-    Þegar leikmaður leggur tetrimino niður með því að hard drop-pa
-    10 stig fyrir hvern reit sem tetrimino-inn féll niður um í hard dropp-inu
-    */
-    let points_1_line:u8 = 100;
-    let points_2_lines:u8 = 250;
-    let points_3_lines:u16 = 400;
-    let points_tetris:u16 = 800;
-    let points_double_tetris:u16 = 1200;
-    let points_per_square_hard_drop:u8 = 10;
-    
-    // Colours
-    const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
-    const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
-    const YELLOW: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-    const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-    const GREEN: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-    const BLUE: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-    const PURPLE: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-    const ORANGE: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-    const LIGHTBLUE: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-    
+    let mut game_updates_per_sec:u64 = 24;                   // How many times per second the game should update
 
+    
+    
+    println!("Variables declared");
 
     // start playing music - Tetris ogg file includes the tetris theme song
 
-    let path = Path::new("Tetris_theme.ogg");
-    let file = File::open("Tetris_theme.ogg").unwrap();
-    let source = rodio::Decoder::new(BufReader::new(file)).unwrap().repeat_infinite();
-    let device = rodio::default_output_device().unwrap();
-    rodio::play_raw(&device, source.convert_samples());
+//    let audio_path = Path::new("audio/Tetris_theme.ogg");
+//    let file = File::open(audio_path).unwrap();
+//    let source = rodio::Decoder::new(BufReader::new(file)).unwrap().repeat_infinite();
+//    let device = rodio::default_output_device().unwrap();
+//    rodio::play_raw(&device, source.convert_samples());
 
-    // If m or M button is pressed, mute/unmute music
-    // event button 'm' is pressed
-    // If mute, unmute, if unmuted, mute.
-    let mute_event = orbtk::shell::prelude::KeyEvent {
-      key: orbtk::shell::event::Key::M(true),
-      state: orbtk::shell::event::ButtonState::Down,
-      text: String::from("functions::mute_audio")
-    };
+    
+//    println!("Audio started");
+    println!("Opening window");
 
 
     // Open a window
@@ -110,23 +83,35 @@ fn main() {
     .build()
     .unwrap();
 
-    //Here the core game resides
-    let mut game = Game {
-        gl: GlGraphics::new(opengl),
-        updates_per_second: 10,
-        game_over: false,
-    };
-
-
-    // Run application
-
+    println!("Window opened");
 
     // Leyfum notandanum að stækka/minnka gluggann
 
-    // Add a loop which waits until enter is pressed to start the game
+    // Add a (full program) loop which waits until enter is pressed to start the game and takes care of menus and such
+
+    // Create tetrimino vecotr
+    let mut mino_vector: Vec<tetrimino::Mino> = Vec::new();
+
+    // Create game
+    let mut current_game = game::Game {
+        gl: GlGraphics::new(opengl),
+        minos: mino_vector,
+        updates_per_second: game_updates_per_sec,
+        audio_on: true,
+        game_over: false,      
+    };
 
     // Game loop - checks if the game is over
-    while functions::game_is_on(top_line ,tetris_zone_height) {
+    //while functions::game_is_on(top_line ,tetris_zone_height) {
+    //Loop - While Game == notover && make sure the runtime of the loop is controlled by the speed
+    let mut events = Events::new(EventSettings::new()).ups(current_game.updates_per_second);
+    while let Some(e) = events.next(&mut window) {
+        // Render game. Must render before the update event
+        //if let Some(r) = e.render_args() {
+            //current_game.render(&r);
+        //}
+        
+
         // Teiknum leiðbeiningar fyrir neðan tetris zone-ið
 
         // Sínum á hvaða borði (e. level) leikmaðurinn er
