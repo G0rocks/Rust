@@ -40,3 +40,16 @@ class tetrimino_I:
 
 """
 */
+
+// Defines the tetrimino structure
+pub struct Mino {
+
+}
+
+//The tetrimino implementation
+impl Mino {
+    pub fn render(&mut self) { //, args: &RenderArgs) {
+
+    }
+
+}
