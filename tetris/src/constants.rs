@@ -2,6 +2,7 @@
 This file contains global constants such as colors
 */
 use std::path::Path;        // Used to find the font file
+use graphics::types::FontSize; // To be able to set the font size
 
 // Window sizes
 pub const WIN_SIZE_X:f64  = 500.0;  //450.0;
@@ -9,7 +10,7 @@ pub const WIN_SIZE_Y:f64  = 600.0;  //580.0;
 pub const BOARDER_THICKNESS:f64 = 5.0;
 //Stuff we need for rendering text on the generated window
 pub const FONT_SIZE:FontSize = 12;
-pub const FONT_NAME:string = "LCD_SOLID.ttf";
+pub const FONT_NAME:&str = "LCD_SOLID.ttf";
 //pub const FONT_PATH = Path::new("C:USERS/HULDA/APPDATA/MICROSOFT/WINDOWS");
 
 // Tetris
