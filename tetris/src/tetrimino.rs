@@ -8,7 +8,6 @@
     - hard_drop()
     - 
 
-
 // Útbúum tetrimino-a klasa - Þeir eru 7 - Munum eftir að gefa þeim allar þær skipanir sem þeir þurfa að kunna
 //
 //Define each tetrimino shape
@@ -41,9 +40,13 @@ class tetrimino_I:
 """
 */
 
+use opengl_graphics::GlGraphics;
+
 // Defines the tetrimino structure
 pub struct Mino {
-
+    gl: GlGraphics,
+    pos_x: i32,
+    pos_y: i32,
 }
 
 //The tetrimino implementation
