@@ -1,11 +1,25 @@
 /*
 This file contains global constants such as colors
 */
+use std::path::Path;        // Used to find the font file
+
+// Window sizes
+pub const WIN_SIZE_X:f64  = 500.0;  //450.0;
+pub const WIN_SIZE_Y:f64  = 600.0;  //580.0;
+pub const BOARDER_THICKNESS:f64 = 5.0;
+//Stuff we need for rendering text on the generated window
+pub const FONT_SIZE:FontSize = 12;
+pub const FONT_NAME:string = "LCD_SOLID.ttf";
+//pub const FONT_PATH = Path::new("C:USERS/HULDA/APPDATA/MICROSOFT/WINDOWS");
+
+// Tetris
+pub const BLOCK_WIDTH:u32 = 25;                                // Number of pixels in the width of a square (squares are used to create tetriminos)
+pub const BLOCK_HEIGHT:u32 = BLOCK_WIDTH;                               // Number of pixels in the height of a square (squares are used to create tetriminos)
 
 // Colours
 pub const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 pub const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
-pub const YELLOW: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
+pub const YELLOW: [f32; 4] = [1.0, 1.0, 0.0, 1.0];
 pub const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 pub const GREEN: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 pub const BLUE: [f32; 4] = [1.0, 0.0, 0.0, 1.0];

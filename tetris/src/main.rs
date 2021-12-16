@@ -28,29 +28,27 @@ extern crate piston;        // Used to manipulate the game window
 
 use piston::window::WindowSettings;
 use piston::event_loop::*;
+use piston::input::{RenderEvent, UpdateEvent};      // So we can render
 use glutin_window::GlutinWindow;    // Piston gluten window, piston depenedency
 use opengl_graphics::{GlGraphics, OpenGL};  // Piston 2D graphics dependency
 //use std::fs::File;          // Used to import the audio file for the music
 //use std::io::BufReader;     // Used to read data from audio file
 //use rodio::Source;          // Used to play audio
-//use std::path::Path;        // Used to find the audio file
+use std::path::Path;        // Used to find the audio file
 use constants::*;           // Global constants, like colours and points
 
-fn main() {
+pub fn main() {
     println!("main function running");
 
     // Breytur (e. Variables) sem við munum þurfa að nota
     let mut _my_points:u32 = 0;                              // How many points the player has
-    let mut _my_level:u8 = 0;                                // What is the current level -> The level determines the fall speed of tetriminos
+    let mut _my_level:u32 = 0;                                // What is the current level -> The level determines the fall speed of tetriminos
     let mut _my_lines:u16 = 0;                               // How many lines has the player made disappear
-    let _block_width:u8 = 20;                                // Number of pixels in the width of a square (squares are used to create tetriminos)
-    let _block_height:u8 = 20;                               // Number of pixels in the height of a square (squares are used to create tetriminos)
     let mut _enter_to_play_has_been_pressed:bool = false;    // Specifies whether the game has started or not
-    let tetris_zone_height:u8 = 40;                         // Specifies the height of the tetris zone in blocks - Standard is a 10x40 playing field (ref: https://tetris.fandom.com/wiki/Playfield#:~:text=The%20Tetris%20Guideline%20specifies%20a,the%20bottom%20of%20row%2021.)
-    let _tetris_zone_width:u8 = 10;                          // Specifies the width of the tetris zone in blocks
-    let mut top_line:u8 = 0;                                // Tells us how high the currently placed blocks reach
+    let tetris_zone_height:u32 = 20*constants::BLOCK_HEIGHT;                         // Specifies the height of the tetris zone in pixels - Standard is a 10x40 (BLOCK X BLOCK) playing field (ref: https://tetris.fandom.com/wiki/Playfield#:~:text=The%20Tetris%20Guideline%20specifies%20a,the%20bottom%20of%20row%2021.)
+    let tetris_zone_width:u32 = 10*constants::BLOCK_WIDTH;                          // Specifies the width of the tetris zone in pixels
+    let mut top_line:u32 = 0;                                // Tells us how high the currently placed blocks reach
     let mut game_updates_per_sec:u64 = 24;                   // How many times per second the game should update
-
     
     
     println!("Variables declared");
@@ -75,7 +73,7 @@ fn main() {
     // Open a window with a press enter to start (and some other information?)
     //WindoSettings::new{Title T (must be string), Size S (must be array, [width,height])}
     //Coordinates for snake: (x0,y0) = (0,0) --> (x1,y1) --> (X_MAX,Y_MAX)
-    let mut window: GlutinWindow = WindowSettings::new("Tetris - Cover by Huldar", (450, 580))
+    let mut window: GlutinWindow = WindowSettings::new("Tetris - Cover by Huldar", (constants::WIN_SIZE_X, constants::WIN_SIZE_Y))
     .fullscreen(false)
     .vsync(true)
     .graphics_api(OpenGL::V3_2)
@@ -99,7 +97,10 @@ fn main() {
         updates_per_second: game_updates_per_sec,
         audio_on: true,
         game_over: false,      
+        zone_width: tetris_zone_width,
+        zone_height: tetris_zone_height,
     };
+
 
     // Game loop - checks if the game is over
     //while functions::game_is_on(top_line ,tetris_zone_height) {
@@ -107,9 +108,12 @@ fn main() {
     let mut events = Events::new(EventSettings::new()).ups(current_game.updates_per_second);
     while let Some(e) = events.next(&mut window) {
         // Render game. Must render before the update event
-        //if let Some(r) = e.render_args() {
-            //current_game.render(&r);
-        //}
+        if let Some(r) = e.render_args() {
+            current_game.render(&r);
+        }
+
+
+        
         
 
         // Teiknum leiðbeiningar fyrir neðan tetris zone-ið

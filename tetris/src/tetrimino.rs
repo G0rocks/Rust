@@ -49,7 +49,7 @@ pub struct Mino {
 //The tetrimino implementation
 impl Mino {
     pub fn render(&mut self) { //, args: &RenderArgs) {
-
+        println!("Rendering tetrimino");
     }
 
 }

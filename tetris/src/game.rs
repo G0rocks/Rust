@@ -11,12 +11,17 @@ use crate::constants;       // For the colours
 // Dependencies
 use opengl_graphics::GlGraphics;    //{GlGraphics, OpenGL};
 
+
+/////////////////////////////////////////////////////////////////////////
+
 pub struct Game {
   pub gl: GlGraphics,
   pub minos: Vec<tetrimino::Mino>,
   pub updates_per_second: u64,
   pub audio_on: bool,
   pub game_over: bool,
+  pub zone_width: u32,
+  pub zone_height: u32,
 }
 
 
@@ -29,14 +34,27 @@ impl Game {
       graphics::clear(constants::BLACK,gl);
     });
 
-    // Render outlines
+    // Render outlines of tetrion
+    let inner_square = graphics::rectangle::rectangle_by_corners(constants::WIN_SIZE_X*0.05, constants::WIN_SIZE_Y*0.05, self.zone_width as f64, self.zone_height as f64);
+    let outer_square = graphics::rectangle::rectangle_by_corners(constants::WIN_SIZE_X*0.05 - constants::BOARDER_THICKNESS, constants::WIN_SIZE_Y*0.05 - constants::BOARDER_THICKNESS, (self.zone_width as f64) + constants::BOARDER_THICKNESS, (self.zone_height as f64) + constants::BOARDER_THICKNESS);
 
     // Render score, level and such
+    //let score_text = "Score: ";
+    //let score_render = graphics::text(constants::WHITE, constants::FONT_SIZE, &score_text, cache: &mut C, transform: math::Matrix2d, g: &mut G)
+
+    // Implement the renders so far
+    self.gl.draw(arg.viewport(), |c,gl|{
+      let transform = c.transform;
+
+      graphics::rectangle(constants::WHITE, outer_square, transform, gl);
+      graphics::rectangle(constants::BLACK, inner_square, transform, gl);
+    });
+
   
     // Render each tetrimino (the first one is the one on hold and the second one is the next tetrimino and the third one is the active tetrimino)
-    for i in 0..self.minos.len() {
-      self.minos[i].render(); //arg);
-    }
+    //for i in 0..self.minos.len() {
+      //self.minos[i].render(); //arg);
+    //}
   }
   
   //This is supposed to be an end game message:
