@@ -40,19 +40,39 @@ class tetrimino_I:
 """
 */
 
-use opengl_graphics::GlGraphics;
+// External crates
+extern crate opengl_graphics;
+
+// Dependencies
+use opengl_graphics::{GlGraphics, OpenGL};
+
+enum mino_shape {
+    I,
+    O,
+    T,
+    S,
+    Z,
+    J,
+    L,
+}
+
 
 // Defines the tetrimino structure
 pub struct Mino {
     gl: GlGraphics,
+    shape: mino_shape,
     pos_x: i32,
     pos_y: i32,
 }
 
 //The tetrimino implementation
 impl Mino {
+    // Creates a new tetrimino
+    pub fn new() -> Mino{
+        return Mino{gl: GlGraphics::new(OpenGL::V4_5), shape: mino_shape::I, pos_x: 18, pos_y: 35};
+    }
+
     pub fn render(&mut self) { //, args: &RenderArgs) {
-        println!("Rendering tetrimino");
     }
 
 }
