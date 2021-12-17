@@ -45,8 +45,120 @@ extern crate opengl_graphics;
 
 // Dependencies
 use opengl_graphics::{GlGraphics, OpenGL};
+use piston::input::*;       // Used to get the render input from user
+use rand::{distributions::{Distribution, Standard},Rng,};
+use crate::{block::{self, Block}, constants};
+use crate::game;
 
-enum mino_shape {
+
+// Defines the tetrimino structure
+pub struct Mino {
+    gl: GlGraphics,
+    shape: MinoShape,
+    color: [f32; 4],
+    blocks: [block::Block; 4],
+    pos_x: i32,
+    pos_y: i32,
+    block_offset: [[i32;2]; 4],
+}
+
+//The tetrimino implementation
+impl Mino {
+    // Creates a new tetrimino
+    pub fn new() -> Mino{
+        let new_shape: MinoShape = rand::random();
+        let new_color: [f32; 4] = get_color(&new_shape);
+        let x_pos: i32 = 18;
+        let y_pos: i32 = 19;
+        let block_off: [[i32; 2]; 4] = get_block_offset(&new_shape);
+        let mut new_mino: Mino = Mino {
+            gl: GlGraphics::new(OpenGL::V4_5),
+            shape: new_shape,
+            color: new_color,
+            blocks: [block::Block::new(new_color, x_pos + block_off[0][0], y_pos + block_off[0][1]),
+                     block::Block::new(new_color, x_pos + block_off[1][0], y_pos + block_off[1][1]),
+                     block::Block::new(new_color, x_pos + block_off[2][0], y_pos + block_off[2][1]),
+                     block::Block::new(new_color, x_pos + block_off[3][0], y_pos + block_off[3][1])],
+            pos_x: x_pos,
+            pos_y: y_pos,
+            block_offset: block_off};
+
+        //new_mino.gl = GlGraphics::new(OpenGL::V4_5);
+        //new_mino.shape = rand::random();
+        //new_mino.color = new_mino.get_color();
+        //new_mino.pos_x = 18;
+        //new_mino.pos_y = 32;
+        //new_mino.blocks = [block::Block::new(new_mino.color, new_mino.pos_x, new_mino.pos_y), block::Block::new(new_mino.color, new_mino.pos_x, new_mino.pos_y), block::Block::new(new_mino.color, new_mino.pos_x, new_mino.pos_y), block::Block::new(new_mino.color, new_mino.pos_x, new_mino.pos_y)];
+    
+        //let mino_shape: MinoShape = rand::random();
+        //let mino_color: [f32; 4] = self.get_color();
+        println!("minoshape: {:?}", new_mino.color);
+
+        //let mino_blocks: Block = Block::new(color: constants::BLUE, x_pos: 18, y_pos: 19);
+        //return Mino{gl: GlGraphics::new(OpenGL::V4_5), shape: mino_shape, color: mino_color, blocks: mino_blocks, pos_x: 18, pos_y: 35};
+        return new_mino;
+    }
+
+    pub fn render(&mut self, arg: &RenderArgs) { //, args: &RenderArgs) {
+        // Render each block in the tetrimino
+        for i in 0..self.blocks.len() {
+            &self.blocks[i].render(arg); //arg);
+        }
+    
+    }
+}
+
+// Used to get a color for the tetrimino being generated. Colors tetrimino depending on shape. Source: https://tetris.fandom.com/wiki/Tetromino#I
+fn get_color(shape_input: &MinoShape) -> [f32; 4] {
+    match shape_input {
+        MinoShape::I => constants::LIGHTBLUE,
+        MinoShape::O => constants::YELLOW,
+        MinoShape::T => constants::PURPLE,
+        MinoShape::S => constants::GREEN,
+        MinoShape::Z => constants::RED,
+        MinoShape::J => constants::BLUE,
+        MinoShape::L => constants::ORANGE,
+    }
+}
+
+// Used to get a color for the tetrimino being generated. Colors tetrimino depending on shape. Source: https://tetris.fandom.com/wiki/Tetromino#I
+fn get_block_offset(shape_input: &MinoShape) -> [[i32;2]; 4] {
+    let block_dim:i32 = constants::BLOCK_DIM as i32;
+    match shape_input {
+        MinoShape::I => [[0,0],
+                         [0,block_dim],
+                         [0,block_dim*2],
+                         [0,block_dim*3]],
+        MinoShape::O => [[0,0],
+                         [0,block_dim],
+                         [block_dim, 0],
+                         [block_dim, block_dim]],
+        MinoShape::T => [[0,0],
+                         [block_dim, 0],
+                         [block_dim, block_dim],
+                         [block_dim*2, 0]],
+        MinoShape::S => [[0,0],
+                        [block_dim, 0],
+                        [block_dim, block_dim],
+                        [block_dim*2, block_dim]],
+        MinoShape::Z => [[0,0],
+                         [0,block_dim],
+                         [block_dim,block_dim],
+                         [block_dim,block_dim*2]],
+        MinoShape::J => [[0,0],
+                         [0,block_dim],
+                         [block_dim, 0],
+                         [block_dim*2, 0]],
+        MinoShape::L => [[0,0],
+                         [block_dim, 0],
+                         [block_dim*2, 0],
+                         [block_dim*2, block_dim]],
+    }
+}
+
+
+#[derive(Debug)]
+enum MinoShape {
     I,
     O,
     T,
@@ -56,23 +168,17 @@ enum mino_shape {
     L,
 }
 
-
-// Defines the tetrimino structure
-pub struct Mino {
-    gl: GlGraphics,
-    shape: mino_shape,
-    pos_x: i32,
-    pos_y: i32,
-}
-
-//The tetrimino implementation
-impl Mino {
-    // Creates a new tetrimino
-    pub fn new() -> Mino{
-        return Mino{gl: GlGraphics::new(OpenGL::V4_5), shape: mino_shape::I, pos_x: 18, pos_y: 35};
+// To be able to get random MinoShapes
+impl Distribution<MinoShape> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> MinoShape {
+        match rng.gen_range(0, 3) {
+            0 => MinoShape::I,
+            1 => MinoShape::O,
+            2 => MinoShape::T,
+            3 => MinoShape::S,
+            4 => MinoShape::Z,
+            5 => MinoShape::J,
+            _ => MinoShape::L,
+        }
     }
-
-    pub fn render(&mut self) { //, args: &RenderArgs) {
-    }
-
 }

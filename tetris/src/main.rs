@@ -16,6 +16,7 @@ Next job: Make a window
 mod functions;  // declare functions.rs as a module
 mod tetrimino;  // declare tetrimino.rs as a module. For use with creating tetrimino related things
 mod game;       // The game module
+mod block;      // The blocks in the tetriminos
 mod constants;  // global constants like colours and points and such
 
 // Declare crates
@@ -45,8 +46,8 @@ pub fn main() {
     let mut _my_level:u32 = 0;                                // What is the current level -> The level determines the fall speed of tetriminos
     let mut _my_lines:u16 = 0;                               // How many lines has the player made disappear
     let mut _enter_to_play_has_been_pressed:bool = false;    // Specifies whether the game has started or not
-    let tetris_zone_height:u32 = 20*constants::BLOCK_HEIGHT;                         // Specifies the height of the tetris zone in pixels - Standard is a 10x40 (BLOCK X BLOCK) playing field (ref: https://tetris.fandom.com/wiki/Playfield#:~:text=The%20Tetris%20Guideline%20specifies%20a,the%20bottom%20of%20row%2021.)
-    let tetris_zone_width:u32 = 10*constants::BLOCK_WIDTH;                          // Specifies the width of the tetris zone in pixels
+    let tetris_zone_height:u32 = 20*constants::BLOCK_DIM;                         // Specifies the height of the tetris zone in pixels - Standard is a 10x40 (BLOCK X BLOCK) playing field (ref: https://tetris.fandom.com/wiki/Playfield#:~:text=The%20Tetris%20Guideline%20specifies%20a,the%20bottom%20of%20row%2021.)
+    let tetris_zone_width:u32 = 10*constants::BLOCK_DIM;                          // Specifies the width of the tetris zone in pixels
     let mut top_line:u32 = 0;                                // Tells us how high the currently placed blocks reach
     let mut game_updates_per_sec:u64 = 24;                   // How many times per second the game should update
     

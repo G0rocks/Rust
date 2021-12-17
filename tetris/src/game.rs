@@ -4,7 +4,7 @@ Contains the struct and implementation of the game itself
 */
 
 // Declare crates
-use piston::input::*;       // Used to get input from user
+use piston::input::*;       // Used to get the render input from user
 use crate::tetrimino;       // Tetriminos are used in the game
 use crate::constants;       // For the colours
 
@@ -53,16 +53,17 @@ impl Game {
       graphics::rectangle(constants::BLACK, score_inner_square, transform, gl);
     });
 
-      // Teiknum leiðbeiningar fyrir neðan tetris zone-ið
 
-      // Sínum á hvaða borði (e. level) leikmaðurinn er
+    // Teiknum leiðbeiningar fyrir neðan tetris zone-ið
 
-      // Sínum fjölda lína sem leikmaðurinn hefur tekist að láta hverfa
+    // Sínum á hvaða borði (e. level) leikmaðurinn er
+
+    // Sínum fjölda lína sem leikmaðurinn hefur tekist að láta hverfa
 
   
     // Render each tetrimino (the first one is the one on hold and the second one is the next tetrimino and the third one is the active tetrimino)
     for i in 0..self.minos.len() {
-      self.minos[i].render(); //arg);
+      self.minos[i].render(arg); //arg);
     }
   }
   
