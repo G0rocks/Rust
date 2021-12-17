@@ -7,7 +7,7 @@ use graphics::types::FontSize; // To be able to set the font size
 // Window sizes
 pub const WIN_SIZE_X:f64  = 500.0;  //450.0;
 pub const WIN_SIZE_Y:f64  = 600.0;  //580.0;
-pub const BOARDER_THICKNESS:f64 = 5.0;
+pub const BORDER_THICKNESS:f64 = 5.0;
 //Stuff we need for rendering text on the generated window
 pub const FONT_SIZE:FontSize = 12;
 pub const FONT_NAME:&str = "LCD_SOLID.ttf";
@@ -23,9 +23,9 @@ pub const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 pub const YELLOW: [f32; 4] = [1.0, 1.0, 0.0, 1.0];
 pub const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 pub const GREEN: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-pub const BLUE: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
+pub const BLUE: [f32; 4] = [0.0, 0.0, 0.8, 1.0];
 pub const PURPLE: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-pub const ORANGE: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
+pub const ORANGE: [f32; 4] = [1.0, 0.368, 0.075, 1.0];
 pub const LIGHTBLUE: [f32; 4] = [1.0, 0.0, 0.0, 1.0];  
 
 
