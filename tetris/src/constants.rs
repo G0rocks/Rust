@@ -14,8 +14,7 @@ pub const FONT_NAME:&str = "LCD_SOLID.ttf";
 //pub const FONT_PATH = Path::new("C:USERS/HULDA/APPDATA/MICROSOFT/WINDOWS");
 
 // Tetris
-pub const BLOCK_WIDTH:u32 = 25;                                // Number of pixels in the width of a square (squares are used to create tetriminos)
-pub const BLOCK_HEIGHT:u32 = BLOCK_WIDTH;                               // Number of pixels in the height of a square (squares are used to create tetriminos)
+pub const BLOCK_DIM:u32 = 25;             // Number of pixels in the width and height of a block (blocks are used to create tetriminos)
 
 // Colours
 pub const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
@@ -26,7 +25,7 @@ pub const GREEN: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 pub const BLUE: [f32; 4] = [0.0, 0.0, 0.8, 1.0];
 pub const PURPLE: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 pub const ORANGE: [f32; 4] = [1.0, 0.368, 0.075, 1.0];
-pub const LIGHTBLUE: [f32; 4] = [1.0, 0.0, 0.0, 1.0];  
+pub const LIGHTBLUE: [f32; 4] = [0.3, 0.3, 1.0, 1.0];  
 
 
 // Stigagjöf (e. point system)
