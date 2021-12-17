@@ -68,8 +68,8 @@ impl Mino {
     pub fn new() -> Mino{
         let new_shape: MinoShape = rand::random();
         let new_color: [f32; 4] = get_color(&new_shape);
-        let x_pos: i32 = 18;
-        let y_pos: i32 = 19;
+        let x_pos: i32 = (constants::WIN_SIZE_X*0.675) as i32;
+        let y_pos: i32 = (constants::WIN_SIZE_Y*0.12) as i32;
         let block_off: [[i32; 2]; 4] = get_block_offset(&new_shape);
         let mut new_mino: Mino = Mino {
             gl: GlGraphics::new(OpenGL::V4_5),

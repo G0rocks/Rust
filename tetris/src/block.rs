@@ -24,17 +24,26 @@ impl Block {
   }
 
   pub fn render(&mut self, arg: &RenderArgs) {
-    let square = graphics::rectangle::rectangle_by_corners(
+    let thick = constants::BLOCK_BORDER_THICKNESS;
+    let square_border = graphics::rectangle::rectangle_by_corners(
       self.pos_x as f64,
       self.pos_y as f64,
       self.pos_x as f64 + (constants::BLOCK_DIM as f64),
       self.pos_y as f64 + (constants::BLOCK_DIM as f64));
-
+    let square = graphics::rectangle::rectangle_by_corners(
+      self.pos_x as f64 + thick,
+      self.pos_y as f64 + thick,
+      self.pos_x as f64 - thick + (constants::BLOCK_DIM as f64),
+      self.pos_y as f64 - thick + (constants::BLOCK_DIM as f64));
+  
       let color = self.col;
+      let mut border_color: [f32; 4] = self.col;
+      border_color[3] = border_color[3]/(8.0 as f32);
 
     // Implement the renders so far
     &self.gl.draw(arg.viewport(), |c,gl|{
       let transform = c.transform;
+      graphics::rectangle(border_color, square_border, transform, gl);
       graphics::rectangle(color, square, transform, gl);
     });
 

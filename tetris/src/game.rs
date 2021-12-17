@@ -38,8 +38,8 @@ impl Game {
     let tetrion_outer_square = graphics::rectangle::rectangle_by_corners(constants::WIN_SIZE_X*0.05 - constants::BORDER_THICKNESS, constants::WIN_SIZE_Y*0.05 - constants::BORDER_THICKNESS, (self.zone_width as f64) + constants::BORDER_THICKNESS, (self.zone_height as f64) + constants::BORDER_THICKNESS);
 
     // Render score, level and such
-    let score_inner_square = graphics::rectangle::rectangle_by_corners(constants::WIN_SIZE_X*0.6, constants::WIN_SIZE_Y*0.2, constants::WIN_SIZE_X*0.95, constants::WIN_SIZE_Y*0.7);
-    let score_outer_square = graphics::rectangle::rectangle_by_corners(constants::WIN_SIZE_X*0.6 - constants::BORDER_THICKNESS, constants::WIN_SIZE_Y*0.2 - constants::BORDER_THICKNESS, constants::WIN_SIZE_X*0.95 + constants::BORDER_THICKNESS, constants::WIN_SIZE_Y*0.7 + constants::BORDER_THICKNESS);
+    let next_mino_inner_square = graphics::rectangle::rectangle_by_corners(constants::WIN_SIZE_X*0.6, constants::WIN_SIZE_Y*0.1, constants::WIN_SIZE_X*0.8, constants::WIN_SIZE_Y*0.3);
+    let next_mino_outer_square = graphics::rectangle::rectangle_by_corners(constants::WIN_SIZE_X*0.6 - constants::BORDER_THICKNESS, constants::WIN_SIZE_Y*0.1 - constants::BORDER_THICKNESS, constants::WIN_SIZE_X*0.8 + constants::BORDER_THICKNESS, constants::WIN_SIZE_Y*0.3 + constants::BORDER_THICKNESS);
     //let score_text = "Score: ";
     //let score_render = graphics::text(constants::WHITE, constants::FONT_SIZE, &score_text, cache: &mut C, transform: math::Matrix2d, g: &mut G)
 
@@ -49,8 +49,8 @@ impl Game {
 
       graphics::rectangle(constants::WHITE, tetrion_outer_square, transform, gl);
       graphics::rectangle(constants::BLACK, tetrion_inner_square, transform, gl);
-      graphics::rectangle(constants::WHITE, score_outer_square, transform, gl);
-      graphics::rectangle(constants::BLACK, score_inner_square, transform, gl);
+      graphics::rectangle(constants::WHITE, next_mino_outer_square, transform, gl);
+      graphics::rectangle(constants::BLACK, next_mino_inner_square, transform, gl);
     });
 
 
@@ -86,7 +86,7 @@ impl Game {
 
   pub fn update(&mut self) {
     // Firstly if nowe need a new tetrimino, add a new one
-    if 1 > self.minos.len() {
+    if 2 > self.minos.len() {
       self.minos.push(tetrimino::Mino::new())
     }
     //Here we need to move all the tetriminos like they're supposed to move or 
