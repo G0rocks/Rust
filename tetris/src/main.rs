@@ -27,7 +27,7 @@ extern crate opengl_graphics;
 extern crate piston;        // Used to manipulate the game window
 
 use piston::window::WindowSettings;
-use piston::event_loop::*;
+use piston::{event_loop::*, UpdateArgs};
 use piston::input::{RenderEvent, UpdateEvent};      // So we can render
 use glutin_window::GlutinWindow;    // Piston gluten window, piston depenedency
 use opengl_graphics::{GlGraphics, OpenGL};  // Piston 2D graphics dependency
@@ -112,38 +112,12 @@ pub fn main() {
             current_game.render(&r);
         }
 
-
-        
-        
-
-        // Teiknum leiðbeiningar fyrir neðan tetris zone-ið
-
-        // Sínum á hvaða borði (e. level) leikmaðurinn er
-
-        // Sínum fjölda lína sem leikmaðurinn hefur tekist að láta hverfa
-
         // Setjum tetrimino inn í skjáinn einn í einu
+        if let Some(u) = e.update_args() {
+            current_game.update();
+        }
 
-        // Látum tetrimino-ana detta, einn í einu, rólega niður
-
-        // Snúum tetrimino-inum þegar leikmaðurinn ýtir á upp örina
 
         top_line = tetris_zone_height+3;
     }
-
-    // Færum tetrimino-inn til hægri/vinstri þegar leikmaðurinn ýtir á hægri/vinstri örvatakkana
-
-    // Látum tetrimino-inn detta hratt niður á meðan leikmaðurinn heldur niðri niður örvatakkanum
-
-    // Setja þá alla leið niður ef leikmaður ýtir á bilslánna - Þekkt sem "Hard drop"
-
-    // Þegar tetriminoarnir mynda heila, óbrotna, lárétta línu yfir allan leikskjáinn þá hverfa þeira og leikmaðurinn fær
-    // stig í samræmi við hversu margar línur hurfu samtímis.
-    // Láta alla kubba fyrir ofan línuna detta niður þegar línan/línurnar hverfa
-    // Færum leikmann á næsta borð (e. level) þegar leikmaður nær ákveðið mörgum stigum. Hraðinn eykst eftir því sem þú kemst á hærra borð
-
-    // Láta tetrimino-a stoppa þegar þeir rekast á annan tetrimino fyrir neðan sig
-    // Setja næsta tetrimino af stað þegar núverandi tetrimino stoppar
-    // Láta leikinn enda þegar tetrimino er stoppar og er fyrir ofan toppinn á skjánum
-    // Þegar leikurinn endar --> Sýna "GAME OVER" og stig leikmanns
 }
