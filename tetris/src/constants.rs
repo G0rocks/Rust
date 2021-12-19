@@ -13,9 +13,16 @@ pub const FONT_NAME:&str = "LCD_SOLID.ttf";
 //pub const FONT_PATH = Path::new("C:USERS/HULDA/APPDATA/MICROSOFT/WINDOWS");
 
 // Tetris
-pub const BLOCK_DIM:u32 = 25;             // Number of pixels in the width and height of a block (blocks are used to create tetriminos)
+pub const BLOCK_DIM:f64 = 25.0;             // Number of pixels in the width and height of a block (blocks are used to create tetriminos)
 pub const BLOCK_BORDER_THICKNESS:f64 = 2.0;
-pub const FALL_START_POS: [i32; 2] = [38, 38];
+pub const TETRIS_ZONE_HEIGHT:f64 = 20.0*BLOCK_DIM as f64;  // 20 blocks high
+pub const TETRIS_ZONE_WIDTH:f64 = 10.0*BLOCK_DIM as f64;  // 10 blocks wide
+pub const TETRIS_ZONE_POS: [f64; 4] = [WIN_SIZE_X*0.05,
+                                      WIN_SIZE_Y*0.05,
+                                      WIN_SIZE_X*0.05 + TETRIS_ZONE_WIDTH,
+                                      WIN_SIZE_Y*0.05 + TETRIS_ZONE_HEIGHT];            // The play zone position
+pub const FALL_START_POS: [f64; 2] = [(TETRIS_ZONE_POS[2] - TETRIS_ZONE_POS[0])/2.0, TETRIS_ZONE_POS[1]];
+
 
 // Colours
 pub const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];

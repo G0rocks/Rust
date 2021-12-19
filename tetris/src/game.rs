@@ -21,8 +21,7 @@ pub struct Game {
   pub fall_count_max: u64,
   pub audio_on: bool,
   pub game_over: bool,
-  pub zone_width: u32,
-  pub zone_height: u32,
+  pub zone_pos: [f64; 4],   // [x1, y1, x2, y2] specifies the coordinates of the two corners of the play zone rectangle
 }
 
 
@@ -35,8 +34,14 @@ impl Game {
     });
 
     // Render outlines of tetrion
-    let tetrion_inner_square = graphics::rectangle::rectangle_by_corners(constants::WIN_SIZE_X*0.05, constants::WIN_SIZE_Y*0.05, self.zone_width as f64, self.zone_height as f64);
-    let tetrion_outer_square = graphics::rectangle::rectangle_by_corners(constants::WIN_SIZE_X*0.05 - constants::BORDER_THICKNESS, constants::WIN_SIZE_Y*0.05 - constants::BORDER_THICKNESS, (self.zone_width as f64) + constants::BORDER_THICKNESS, (self.zone_height as f64) + constants::BORDER_THICKNESS);
+    let tetrion_inner_square = graphics::rectangle::rectangle_by_corners(self.zone_pos[0],
+                                                                                  self.zone_pos[1],
+                                                                                  self.zone_pos[2],
+                                                                                  self.zone_pos[3]);  // self.zone_width as f64, self.zone_height as f64);
+    let tetrion_outer_square = graphics::rectangle::rectangle_by_corners(self.zone_pos[0] - constants::BORDER_THICKNESS,
+                                                                                self.zone_pos[1] - constants::BORDER_THICKNESS,
+                                                                                self.zone_pos[2] + constants::BORDER_THICKNESS,
+                                                                                self.zone_pos[3] + constants::BORDER_THICKNESS);
 
     // Render score, level and such
     let next_mino_inner_square = graphics::rectangle::rectangle_by_corners(constants::WIN_SIZE_X*0.6, constants::WIN_SIZE_Y*0.1, constants::WIN_SIZE_X*0.8, constants::WIN_SIZE_Y*0.3);
@@ -87,10 +92,12 @@ impl Game {
 
   pub fn update(&mut self) {
     //println!("Updating game, minos.len: {}", self.minos.len());
+    let mut next_counter : u32 = 0;   // Counts the number of minos in the tetrimino::MinoState::Next state
     if self.fall_counter == 0 {
       for i in 0..self.minos.len() {
+        self.minos[i].update(); // Start by updating the mino
         // Update each tetrimino, the state, rotation and position of the tetrimino
-        println!("Mino {} pos: x: {}, y: {}", i, self.minos[i].pos_x, self.minos[i].pos_y);
+        //println!("Mino {} pos: x: {}, y: {}", i, self.minos[i].pos_x, self.minos[i].pos_y);
         //println!("Mino.last_state is {:?}", self.minos[i].last_state);
         match self.minos[i].state {
           tetrimino::MinoState::Falling => {  // Tetrimino is falling
@@ -98,78 +105,92 @@ impl Game {
             match self.minos[i].last_state {
               tetrimino::MinoState::Next => {
                 self.minos[i].set_fall_start_pos();
-                self.minos[i].update();
               }
               _=> {
               // Do nothing
               }
             }
             // Check if mino can keep falling
+            // Check if the mino is on top of another mino
 
-              // If mino can keep falling, make it continue
-              self.minos[i].update();
-
-              // If mino can't keep falling, set state to still and perform game over check
-              self.minos[i].pos_x = self.minos[i].pos_x - 0;
-              self.minos[i].pos_y = self.minos[i].pos_y + constants::BLOCK_DIM as i32;
-            },
-            tetrimino::MinoState::Next => {
-              // Check if there is a previous mino, if not, set this mino to falling, add a new mino
-              if self.minos.len() < 2 {
-                self.minos[i].set_state(tetrimino::MinoState::Falling);
-                self.minos.push(tetrimino::Mino::new());
-              }
-              else {
-                // Check the state of the previous mino
-
-                // If the state is falling, or hold, do nothing, if the state is next, delete this mino, if the state is still, change the state of this mino to falling
-                match self.minos[i-1].state {
-                  tetrimino::MinoState::Still => self.minos[i].set_state(tetrimino::MinoState::Falling),
-                  tetrimino::MinoState::Next => {
-                    self.minos.remove(i);},
-                  _ => {
-                    // Update mino
-                    self.minos[i].update();
-                  },
-                }
-              }
-            },
-            tetrimino::MinoState::Hold => {
-              // Do nothing
-            },
-            tetrimino::MinoState::None => {
-              // Do nothing
-            },
-            tetrimino::MinoState::Still => {
-              // Perform game over check
+            // Check if the mino is at the bottom
+            if self.minos[i].pos_y >= (self.zone_pos[3] - constants::BLOCK_DIM) {
+              self.minos[i].set_state(tetrimino::MinoState::Still);
             }
+
+            // If mino can keep falling, make it continue
+
+            // If mino can't keep falling, set state to still and perform game over check
+            self.minos[i].pos_x = self.minos[i].pos_x - 0.0;
+            self.minos[i].pos_y = self.minos[i].pos_y + constants::BLOCK_DIM;
+          },
+          tetrimino::MinoState::Next => {
+            next_counter = next_counter + 1;
+            // Check if there is a previous mino, if not, set this mino to falling
+            if self.minos.len() < 2 {
+              self.minos[i].set_state(tetrimino::MinoState::Falling);
+              self.minos[i].set_fall_start_pos();   // Set the fall starting position so that we won't have 2 minos in the "Next" window at the same time
+            }
+            else {
+              // Check the state of the previous mino
+
+              // If the state is falling, or hold, do nothing, if the state is next, delete this mino, if the state is still, change the state of this mino to falling
+              match self.minos[i-1].state {
+                tetrimino::MinoState::Still => {
+                  // Change the mino to falling, set to fall start pos and add a new mino
+                  self.minos[i].set_state(tetrimino::MinoState::Falling);
+                  self.minos[i].set_fall_start_pos();
+                },
+                tetrimino::MinoState::Next => {
+                  self.minos.remove(i);
+                },
+                _ => {
+                  // Do nothing
+                },
+              }
+            }
+          },
+          tetrimino::MinoState::Hold => {
+            // Do nothing
+          },
+          tetrimino::MinoState::None => {
+            // Do nothing
+          },
+          tetrimino::MinoState::Still => {
+            // Perform game over check
           }
-    
-          //Here we need to move all the tetriminos like they're supposed to move or 
-      
-          // Látum tetrimino-ana detta, einn í einu, rólega niður
-      
-          // Snúum tetrimino-inum þegar leikmaðurinn ýtir á upp örina
-          // Færum tetrimino-inn til hægri/vinstri þegar leikmaðurinn ýtir á hægri/vinstri örvatakkana
-      
-          // Látum tetrimino-inn detta hratt niður á meðan leikmaðurinn heldur niðri niður örvatakkanum
-      
-          // Setja þá alla leið niður ef leikmaður ýtir á bilslánna - Þekkt sem "Hard drop"
-      
-          // Þegar tetriminoarnir mynda heila, óbrotna, lárétta línu yfir allan leikskjáinn þá hverfa þeira og leikmaðurinn fær
-          // stig í samræmi við hversu margar línur hurfu samtímis.
-          // Láta alla kubba fyrir ofan línuna detta niður þegar línan/línurnar hverfa
-          // Færum leikmann á næsta borð (e. level) þegar leikmaður nær ákveðið mörgum stigum. Hraðinn eykst eftir því sem þú kemst á hærra borð
-      
-          // Láta tetrimino-a stoppa þegar þeir rekast á annan tetrimino fyrir neðan sig
-          // Setja næsta tetrimino af stað þegar núverandi tetrimino stoppar
-          // Láta leikinn enda þegar tetrimino er stoppar og er fyrir ofan toppinn á skjánum
-          // Þegar leikurinn endar --> Sýna "GAME OVER" og stig leikmanns  
         }
+  
+        //Here we need to move all the tetriminos like they're supposed to move or 
+    
+        // Látum tetrimino-ana detta, einn í einu, rólega niður
+    
+        // Snúum tetrimino-inum þegar leikmaðurinn ýtir á upp örina
+        // Færum tetrimino-inn til hægri/vinstri þegar leikmaðurinn ýtir á hægri/vinstri örvatakkana
+    
+        // Látum tetrimino-inn detta hratt niður á meðan leikmaðurinn heldur niðri niður örvatakkanum
+    
+        // Setja þá alla leið niður ef leikmaður ýtir á bilslánna - Þekkt sem "Hard drop"
+    
+        // Þegar tetriminoarnir mynda heila, óbrotna, lárétta línu yfir allan leikskjáinn þá hverfa þeira og leikmaðurinn fær
+        // stig í samræmi við hversu margar línur hurfu samtímis.
+        // Láta alla kubba fyrir ofan línuna detta niður þegar línan/línurnar hverfa
+        // Færum leikmann á næsta borð (e. level) þegar leikmaður nær ákveðið mörgum stigum. Hraðinn eykst eftir því sem þú kemst á hærra borð
+    
+        // Láta tetrimino-a stoppa þegar þeir rekast á annan tetrimino fyrir neðan sig
+        // Setja næsta tetrimino af stað þegar núverandi tetrimino stoppar
+        // Láta leikinn enda þegar tetrimino er stoppar og er fyrir ofan toppinn á skjánum
+        // Þegar leikurinn endar --> Sýna "GAME OVER" og stig leikmanns  
+      }
+
+      // Add new mino if there is no mino with the tetrimino::MinoState::Next state
+      if next_counter == 0 {
+        self.minos.push(tetrimino::Mino::new());
+      }
     }
-    else {
-      self.fall_counter = (self.fall_counter+1)%self.fall_count_max;
-    }
+
+    // Update the fall counter
+    self.fall_counter = (self.fall_counter+1)%self.fall_count_max;
   }
 
   /*

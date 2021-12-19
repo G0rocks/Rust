@@ -56,9 +56,9 @@ pub struct Mino {
     shape: MinoShape,
     color: [f32; 4],
     blocks: [block::Block; 4],
-    pub pos_x: i32,
-    pub pos_y: i32,
-    block_offset: [[i32;2]; 4],
+    pub pos_x: f64,
+    pub pos_y: f64,
+    block_offset: [[f64;2]; 4],
     pub state: MinoState,
     pub last_state: MinoState
 }
@@ -69,9 +69,9 @@ impl Mino {
     pub fn new() -> Mino{
         let new_shape: MinoShape = rand::random();
         let new_color: [f32; 4] = get_color(&new_shape);
-        let x_pos: i32 = (constants::WIN_SIZE_X*0.675) as i32;
-        let y_pos: i32 = (constants::WIN_SIZE_Y*0.12) as i32;
-        let block_off: [[i32; 2]; 4] = get_block_offset(&new_shape);
+        let x_pos: f64 = constants::WIN_SIZE_X*0.675;
+        let y_pos: f64 = constants::WIN_SIZE_Y*0.18;
+        let block_off: [[f64; 2]; 4] = get_block_offset(&new_shape);
         let new_mino: Mino = Mino {
             gl: GlGraphics::new(OpenGL::V4_5),
             shape: new_shape,
@@ -115,9 +115,9 @@ impl Mino {
 
     // Set fall start position
     pub fn set_fall_start_pos(&mut self) {
-        println!("Setting fall start position for mino {:?}", self.shape);
         self.pos_x = constants::FALL_START_POS[0];
         self.pos_y = constants::FALL_START_POS[1];
+        println!("Setting fall start position for mino {:?} to (x,y) = ({},{})", self.shape, self.pos_x, self.pos_y);
     }
 
     // Update block positions
@@ -164,37 +164,37 @@ fn get_color(shape_input: &MinoShape) -> [f32; 4] {
 }
 
 // Used to get a color for the tetrimino being generated. Colors tetrimino depending on shape. Source: https://tetris.fandom.com/wiki/Tetromino#I
-fn get_block_offset(shape_input: &MinoShape) -> [[i32;2]; 4] {
-    let block_dim:i32 = constants::BLOCK_DIM as i32;
+fn get_block_offset(shape_input: &MinoShape) -> [[f64;2]; 4] {
+    let block_dim:f64 = constants::BLOCK_DIM as f64;
     match shape_input {
-        MinoShape::I => [[0,0],
-                         [0,block_dim],
-                         [0,block_dim*2],
-                         [0,block_dim*3]],
-        MinoShape::O => [[0,0],
-                         [0,block_dim],
-                         [block_dim, 0],
-                         [block_dim, block_dim]],
-        MinoShape::T => [[0,0],
-                         [block_dim, 0],
-                         [block_dim, block_dim],
-                         [block_dim*2, 0]],
-        MinoShape::S => [[0,0],
-                        [block_dim, 0],
-                        [block_dim, block_dim],
-                        [block_dim*2, block_dim]],
-        MinoShape::Z => [[0,0],
-                         [0,block_dim],
-                         [block_dim,block_dim],
-                         [block_dim,block_dim*2]],
-        MinoShape::J => [[0,0],
-                         [0,block_dim],
-                         [block_dim, 0],
-                         [block_dim*2, 0]],
-        MinoShape::L => [[0,0],
-                         [block_dim, 0],
-                         [block_dim*2, 0],
-                         [block_dim*2, block_dim]],
+        MinoShape::I => [[0.0,0.0],
+                         [0.0,-block_dim],
+                         [0.0,-block_dim*2.0],
+                         [0.0,-block_dim*3.0]],
+        MinoShape::O => [[0.0,0.0],
+                         [0.0,-block_dim],
+                         [-block_dim, 0.0],
+                         [-block_dim, -block_dim]],
+        MinoShape::T => [[0.0,0.0],
+                         [-block_dim, 0.0],
+                         [-block_dim, -block_dim],
+                         [-block_dim*2.0, 0.0]],
+        MinoShape::S => [[0.0,0.0],
+                        [-block_dim, 0.0],
+                        [-block_dim, -block_dim],
+                        [-block_dim*2.0, -block_dim]],
+        MinoShape::Z => [[0.0,0.0],
+                         [0.0,-block_dim],
+                         [-block_dim,-block_dim],
+                         [-block_dim,-block_dim*2.0]],
+        MinoShape::J => [[0.0,0.0],
+                         [0.0,-block_dim],
+                         [-block_dim, 0.0],
+                         [-block_dim*2.0, 0.0]],
+        MinoShape::L => [[0.0,0.0],
+                         [-block_dim, 0.0],
+                         [-block_dim*2.0, 0.0],
+                         [-block_dim*2.0, -block_dim]],
     }
 }
 

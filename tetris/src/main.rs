@@ -45,12 +45,12 @@ pub fn main() {
     let mut _my_level:u32 = 0;                                // What is the current level -> The level determines the fall speed of tetriminos
     let mut _my_lines:u16 = 0;                               // How many lines has the player made disappear
     let mut _enter_to_play_has_been_pressed:bool = false;    // Specifies whether the game has started or not
-    let tetris_zone_height:u32 = 20*constants::BLOCK_DIM;                         // Specifies the height of the tetris zone in pixels - Standard is a 10x40 (BLOCK X BLOCK) playing field (ref: https://tetris.fandom.com/wiki/Playfield#:~:text=The%20Tetris%20Guideline%20specifies%20a,the%20bottom%20of%20row%2021.)
-    let tetris_zone_width:u32 = 10*constants::BLOCK_DIM;                          // Specifies the width of the tetris zone in pixels
-    let mut top_line:u32 = 0;                                // Tells us how high the currently placed blocks reach
-    let mut game_updates_per_sec:u64 = 24;                   // How many times per second the game should update
-    
-    
+    let tetris_zone_pos: [f64; 4] = constants::TETRIS_ZONE_POS; /*[constants::WIN_SIZE_X*0.05,
+                                    constants::WIN_SIZE_Y*0.05,
+                                    constants::WIN_SIZE_X*0.05 + constants::TETRIS_ZONE_WIDTH,
+                                    constants::WIN_SIZE_Y*0.05 + constants::TETRIS_ZONE_HEIGHT];            // The play zone position*/
+    let game_updates_per_sec:u64 = 24;                   // How many times per second the game should update
+
     println!("Variables declared");
 
     // start playing music - Tetris ogg file includes the tetris theme song
@@ -96,11 +96,10 @@ pub fn main() {
         minos: mino_vector,
         updates_per_second: game_updates_per_sec,
         fall_counter: 0,
-        fall_count_max: 120,
+        fall_count_max: 12,
         audio_on: true,
-        game_over: false,      
-        zone_width: tetris_zone_width,
-        zone_height: tetris_zone_height,
+        game_over: false,
+        zone_pos: tetris_zone_pos,
     };
 
     // Firstly we need a new tetrimino, so we add a new one
@@ -122,9 +121,6 @@ pub fn main() {
         if let Some(u) = e.update_args() {
             current_game.update();
         }
-
-
-        top_line = tetris_zone_height+3;
     }
 
     println!("Game over");
