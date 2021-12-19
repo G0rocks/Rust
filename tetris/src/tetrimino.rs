@@ -47,8 +47,7 @@ extern crate opengl_graphics;
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::input::*;       // Used to get the render input from user
 use rand::{distributions::{Distribution, Standard},Rng,};
-use crate::{block::{self, Block}, constants};
-use crate::game;
+use crate::{block, constants};
 
 
 // Defines the tetrimino structure
@@ -57,9 +56,11 @@ pub struct Mino {
     shape: MinoShape,
     color: [f32; 4],
     blocks: [block::Block; 4],
-    pos_x: i32,
-    pos_y: i32,
+    pub pos_x: i32,
+    pub pos_y: i32,
     block_offset: [[i32;2]; 4],
+    pub state: MinoState,
+    pub last_state: MinoState
 }
 
 //The tetrimino implementation
@@ -71,7 +72,7 @@ impl Mino {
         let x_pos: i32 = (constants::WIN_SIZE_X*0.675) as i32;
         let y_pos: i32 = (constants::WIN_SIZE_Y*0.12) as i32;
         let block_off: [[i32; 2]; 4] = get_block_offset(&new_shape);
-        let mut new_mino: Mino = Mino {
+        let new_mino: Mino = Mino {
             gl: GlGraphics::new(OpenGL::V4_5),
             shape: new_shape,
             color: new_color,
@@ -81,30 +82,71 @@ impl Mino {
                      block::Block::new(new_color, x_pos + block_off[3][0], y_pos + block_off[3][1])],
             pos_x: x_pos,
             pos_y: y_pos,
-            block_offset: block_off};
+            block_offset: block_off,
+            state: MinoState::Next,
+            last_state: MinoState::None};
 
-        //new_mino.gl = GlGraphics::new(OpenGL::V4_5);
-        //new_mino.shape = rand::random();
-        //new_mino.color = new_mino.get_color();
-        //new_mino.pos_x = 18;
-        //new_mino.pos_y = 32;
-        //new_mino.blocks = [block::Block::new(new_mino.color, new_mino.pos_x, new_mino.pos_y), block::Block::new(new_mino.color, new_mino.pos_x, new_mino.pos_y), block::Block::new(new_mino.color, new_mino.pos_x, new_mino.pos_y), block::Block::new(new_mino.color, new_mino.pos_x, new_mino.pos_y)];
-    
-        //let mino_shape: MinoShape = rand::random();
-        //let mino_color: [f32; 4] = self.get_color();
-        println!("minoshape: {:?}", new_mino.color);
+        println!("MinoShape: {:?}", new_mino.shape);
 
-        //let mino_blocks: Block = Block::new(color: constants::BLUE, x_pos: 18, y_pos: 19);
-        //return Mino{gl: GlGraphics::new(OpenGL::V4_5), shape: mino_shape, color: mino_color, blocks: mino_blocks, pos_x: 18, pos_y: 35};
         return new_mino;
     }
 
     pub fn render(&mut self, arg: &RenderArgs) { //, args: &RenderArgs) {
         // Render each block in the tetrimino
         for i in 0..self.blocks.len() {
-            &self.blocks[i].render(arg); //arg);
+            self.blocks[i].render(arg); //arg);
         }
-    
+    }
+
+    // Update tetrimino
+    pub fn update(&mut self) {
+        // Update the states 
+        self.set_state(self.state);
+        
+        // Update the block position
+        self.update_block_pos();
+    }
+
+    // Sets the state of a tetrimino
+    pub fn set_state(&mut self, new_state: MinoState) {
+        self.last_state = self.state;
+        self.state = new_state;
+    }
+
+    // Set fall start position
+    pub fn set_fall_start_pos(&mut self) {
+        println!("Setting fall start position for mino {:?}", self.shape);
+        self.pos_x = constants::FALL_START_POS[0];
+        self.pos_y = constants::FALL_START_POS[1];
+    }
+
+    // Update block positions
+    pub fn update_block_pos(&mut self) {
+        for i in 0..self.blocks.len() {
+            self.blocks[i].pos_x = self.pos_x + self.block_offset[i][0];
+            self.blocks[i].pos_y = self.pos_y + self.block_offset[i][1];
+        }
+    }
+}
+
+// Implement Clone for Mino struct
+impl Clone for Mino {
+    fn clone (&self) -> Mino {
+        //*self
+        let clone_mino: Mino = Mino {
+            gl: GlGraphics::new(OpenGL::V4_5),
+            shape: self.shape,
+            color: self.color,
+            blocks: [block::Block::new(self.color, self.pos_x + self.block_offset[0][0], self.pos_y + self.block_offset[0][1]),
+                     block::Block::new(self.color, self.pos_x + self.block_offset[1][0], self.pos_y + self.block_offset[1][1]),
+                     block::Block::new(self.color, self.pos_x + self.block_offset[2][0], self.pos_y + self.block_offset[2][1]),
+                     block::Block::new(self.color, self.pos_x + self.block_offset[3][0], self.pos_y + self.block_offset[3][1])],
+            pos_x: self.pos_x,
+            pos_y: self.pos_y,
+            block_offset: self.block_offset,
+            state: self.state,
+            last_state: self.last_state};
+        return clone_mino;
     }
 }
 
@@ -158,6 +200,7 @@ fn get_block_offset(shape_input: &MinoShape) -> [[i32;2]; 4] {
 
 
 #[derive(Debug)]
+#[derive(Copy, Clone)]
 enum MinoShape {
     I,
     O,
@@ -181,4 +224,13 @@ impl Distribution<MinoShape> for Standard {
             _ => MinoShape::L,
         }
     }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum MinoState {
+    Next,
+    Falling,
+    Hold,
+    Still,
+    None
 }

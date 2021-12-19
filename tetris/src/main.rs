@@ -28,15 +28,14 @@ extern crate opengl_graphics;
 extern crate piston;        // Used to manipulate the game window
 
 use piston::window::WindowSettings;
-use piston::{event_loop::*, UpdateArgs};
+use piston::event_loop::*;
 use piston::input::{RenderEvent, UpdateEvent};      // So we can render
 use glutin_window::GlutinWindow;    // Piston gluten window, piston depenedency
 use opengl_graphics::{GlGraphics, OpenGL};  // Piston 2D graphics dependency
 //use std::fs::File;          // Used to import the audio file for the music
 //use std::io::BufReader;     // Used to read data from audio file
 //use rodio::Source;          // Used to play audio
-use std::path::Path;        // Used to find the audio file
-use constants::*;           // Global constants, like colours and points
+//use std::path::Path;        // Used to find the audio file
 
 pub fn main() {
     println!("main function running");
@@ -96,17 +95,23 @@ pub fn main() {
         gl: GlGraphics::new(opengl),
         minos: mino_vector,
         updates_per_second: game_updates_per_sec,
+        fall_counter: 0,
+        fall_count_max: 120,
         audio_on: true,
         game_over: false,      
         zone_width: tetris_zone_width,
         zone_height: tetris_zone_height,
     };
 
+    // Firstly we need a new tetrimino, so we add a new one
+    current_game.minos.push(tetrimino::Mino::new());
+
 
     // Game loop - checks if the game is over
     //while functions::game_is_on(top_line ,tetris_zone_height) {
     //Loop - While Game == notover && make sure the runtime of the loop is controlled by the speed
     let mut events = Events::new(EventSettings::new()).ups(current_game.updates_per_second);
+    println!("Game started");
     while let Some(e) = events.next(&mut window) {
         // Render game. Must render before the update event
         if let Some(r) = e.render_args() {
@@ -121,4 +126,6 @@ pub fn main() {
 
         top_line = tetris_zone_height+3;
     }
+
+    println!("Game over");
 }

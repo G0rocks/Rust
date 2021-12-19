@@ -17,12 +17,13 @@ pub struct Game {
   pub gl: GlGraphics,
   pub minos: Vec<tetrimino::Mino>,
   pub updates_per_second: u64,
+  pub fall_counter: u64,
+  pub fall_count_max: u64,
   pub audio_on: bool,
   pub game_over: bool,
   pub zone_width: u32,
   pub zone_height: u32,
 }
-
 
 
 // Run application
@@ -63,7 +64,7 @@ impl Game {
   
     // Render each tetrimino (the first one is the one on hold and the second one is the next tetrimino and the third one is the active tetrimino)
     for i in 0..self.minos.len() {
-      self.minos[i].render(arg); //arg);
+      self.minos[i].render(arg);
     }
   }
   
@@ -85,30 +86,90 @@ impl Game {
     */
 
   pub fn update(&mut self) {
-    // Firstly if nowe need a new tetrimino, add a new one
-    if 2 > self.minos.len() {
-      self.minos.push(tetrimino::Mino::new())
+    //println!("Updating game, minos.len: {}", self.minos.len());
+    if self.fall_counter == 0 {
+      for i in 0..self.minos.len() {
+        // Update each tetrimino, the state, rotation and position of the tetrimino
+        println!("Mino {} pos: x: {}, y: {}", i, self.minos[i].pos_x, self.minos[i].pos_y);
+        //println!("Mino.last_state is {:?}", self.minos[i].last_state);
+        match self.minos[i].state {
+          tetrimino::MinoState::Falling => {  // Tetrimino is falling
+            // Check last state, if last state was Next then set_start_fall_pos
+            match self.minos[i].last_state {
+              tetrimino::MinoState::Next => {
+                self.minos[i].set_fall_start_pos();
+                self.minos[i].update();
+              }
+              _=> {
+              // Do nothing
+              }
+            }
+            // Check if mino can keep falling
+
+              // If mino can keep falling, make it continue
+              self.minos[i].update();
+
+              // If mino can't keep falling, set state to still and perform game over check
+              self.minos[i].pos_x = self.minos[i].pos_x - 0;
+              self.minos[i].pos_y = self.minos[i].pos_y + constants::BLOCK_DIM as i32;
+            },
+            tetrimino::MinoState::Next => {
+              // Check if there is a previous mino, if not, set this mino to falling, add a new mino
+              if self.minos.len() < 2 {
+                self.minos[i].set_state(tetrimino::MinoState::Falling);
+                self.minos.push(tetrimino::Mino::new());
+              }
+              else {
+                // Check the state of the previous mino
+
+                // If the state is falling, or hold, do nothing, if the state is next, delete this mino, if the state is still, change the state of this mino to falling
+                match self.minos[i-1].state {
+                  tetrimino::MinoState::Still => self.minos[i].set_state(tetrimino::MinoState::Falling),
+                  tetrimino::MinoState::Next => {
+                    self.minos.remove(i);},
+                  _ => {
+                    // Update mino
+                    self.minos[i].update();
+                  },
+                }
+              }
+            },
+            tetrimino::MinoState::Hold => {
+              // Do nothing
+            },
+            tetrimino::MinoState::None => {
+              // Do nothing
+            },
+            tetrimino::MinoState::Still => {
+              // Perform game over check
+            }
+          }
+    
+          //Here we need to move all the tetriminos like they're supposed to move or 
+      
+          // Látum tetrimino-ana detta, einn í einu, rólega niður
+      
+          // Snúum tetrimino-inum þegar leikmaðurinn ýtir á upp örina
+          // Færum tetrimino-inn til hægri/vinstri þegar leikmaðurinn ýtir á hægri/vinstri örvatakkana
+      
+          // Látum tetrimino-inn detta hratt niður á meðan leikmaðurinn heldur niðri niður örvatakkanum
+      
+          // Setja þá alla leið niður ef leikmaður ýtir á bilslánna - Þekkt sem "Hard drop"
+      
+          // Þegar tetriminoarnir mynda heila, óbrotna, lárétta línu yfir allan leikskjáinn þá hverfa þeira og leikmaðurinn fær
+          // stig í samræmi við hversu margar línur hurfu samtímis.
+          // Láta alla kubba fyrir ofan línuna detta niður þegar línan/línurnar hverfa
+          // Færum leikmann á næsta borð (e. level) þegar leikmaður nær ákveðið mörgum stigum. Hraðinn eykst eftir því sem þú kemst á hærra borð
+      
+          // Láta tetrimino-a stoppa þegar þeir rekast á annan tetrimino fyrir neðan sig
+          // Setja næsta tetrimino af stað þegar núverandi tetrimino stoppar
+          // Láta leikinn enda þegar tetrimino er stoppar og er fyrir ofan toppinn á skjánum
+          // Þegar leikurinn endar --> Sýna "GAME OVER" og stig leikmanns  
+        }
     }
-    //Here we need to move all the tetriminos like they're supposed to move or 
-
-    // Látum tetrimino-ana detta, einn í einu, rólega niður
-
-    // Snúum tetrimino-inum þegar leikmaðurinn ýtir á upp örina
-    // Færum tetrimino-inn til hægri/vinstri þegar leikmaðurinn ýtir á hægri/vinstri örvatakkana
-
-    // Látum tetrimino-inn detta hratt niður á meðan leikmaðurinn heldur niðri niður örvatakkanum
-
-    // Setja þá alla leið niður ef leikmaður ýtir á bilslánna - Þekkt sem "Hard drop"
-
-    // Þegar tetriminoarnir mynda heila, óbrotna, lárétta línu yfir allan leikskjáinn þá hverfa þeira og leikmaðurinn fær
-    // stig í samræmi við hversu margar línur hurfu samtímis.
-    // Láta alla kubba fyrir ofan línuna detta niður þegar línan/línurnar hverfa
-    // Færum leikmann á næsta borð (e. level) þegar leikmaður nær ákveðið mörgum stigum. Hraðinn eykst eftir því sem þú kemst á hærra borð
-
-    // Láta tetrimino-a stoppa þegar þeir rekast á annan tetrimino fyrir neðan sig
-    // Setja næsta tetrimino af stað þegar núverandi tetrimino stoppar
-    // Láta leikinn enda þegar tetrimino er stoppar og er fyrir ofan toppinn á skjánum
-    // Þegar leikurinn endar --> Sýna "GAME OVER" og stig leikmanns
+    else {
+      self.fall_counter = (self.fall_counter+1)%self.fall_count_max;
+    }
   }
 
   /*

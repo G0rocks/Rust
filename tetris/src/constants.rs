@@ -1,7 +1,6 @@
 /*
 This file contains global constants such as colors
 */
-use std::path::Path;        // Used to find the font file
 use graphics::types::FontSize; // To be able to set the font size
 
 // Window sizes
@@ -16,6 +15,7 @@ pub const FONT_NAME:&str = "LCD_SOLID.ttf";
 // Tetris
 pub const BLOCK_DIM:u32 = 25;             // Number of pixels in the width and height of a block (blocks are used to create tetriminos)
 pub const BLOCK_BORDER_THICKNESS:f64 = 2.0;
+pub const FALL_START_POS: [i32; 2] = [38, 38];
 
 // Colours
 pub const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];

@@ -7,15 +7,15 @@ extern crate opengl_graphics;
 // Dependencies
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::input::*;       // Used to get the render input from user
-use crate::game;
 use crate::constants;   // For the dimensions
 
+//#[derive(Copy)]
 pub struct Block {
   gl: GlGraphics,
   col: [f32; 4],
   dim: u32,
-  pos_x: i32,
-  pos_y: i32,
+  pub pos_x: i32,
+  pub pos_y: i32,
 }
 
 impl Block {
@@ -48,5 +48,18 @@ impl Block {
     });
 
 
+  }
+}
+
+impl Clone for Block {
+  fn clone (&self) -> Block {
+    let clone_block: Block = Block {
+      gl: GlGraphics::new(OpenGL::V4_5),
+      col: self.col,
+      dim: self.dim,
+      pos_x: self.pos_x,
+      pos_y: self.pos_y,
+    };
+    return clone_block;
   }
 }
