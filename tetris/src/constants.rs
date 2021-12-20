@@ -1,27 +1,33 @@
 /*
 This file contains global constants such as colors
 */
-use graphics::types::FontSize; // To be able to set the font size
 
 // Window sizes
-pub const WIN_SIZE_X:f64  = 500.0;  //450.0;
-pub const WIN_SIZE_Y:f64  = 600.0;  //580.0;
+pub const GRID_BLOCK_BUFFER:usize = 8;
+pub const GRID_BLOCK_SIZE_X:usize = 22 + GRID_BLOCK_BUFFER;  // block wide window with block buffer because of tetrimino::MinoShape::I 
+pub const GRID_BLOCK_SIZE_Y:usize = 25 + GRID_BLOCK_BUFFER;  // block high window with block buffer because of tetrimino::MinoShape::I
+pub const WIN_SIZE_X:f64  = (GRID_BLOCK_SIZE_X - GRID_BLOCK_BUFFER) as f64 * BLOCK_DIM;  //450.0;
+pub const WIN_SIZE_Y:f64  = (GRID_BLOCK_SIZE_Y - GRID_BLOCK_BUFFER) as f64 * BLOCK_DIM;  //580.0;
 pub const BORDER_THICKNESS:f64 = 5.0;
 //Stuff we need for rendering text on the generated window
-pub const FONT_SIZE:FontSize = 12;
+pub const FONT_SIZE:u32 = 12;
 pub const FONT_NAME:&str = "LCD_SOLID.ttf";
 //pub const FONT_PATH = Path::new("C:USERS/HULDA/APPDATA/MICROSOFT/WINDOWS");
 
 // Tetris
-pub const BLOCK_DIM:f64 = 25.0;             // Number of pixels in the width and height of a block (blocks are used to create tetriminos)
+pub const BLOCK_DIM:f64 = 20.0;             // Number of pixels in the width and height of a block (blocks are used to create tetriminos and this dimension is used for the window grid)
 pub const BLOCK_BORDER_THICKNESS:f64 = 2.0;
-pub const TETRIS_ZONE_HEIGHT:f64 = 20.0*BLOCK_DIM as f64;  // 20 blocks high
-pub const TETRIS_ZONE_WIDTH:f64 = 10.0*BLOCK_DIM as f64;  // 10 blocks wide
-pub const TETRIS_ZONE_POS: [f64; 4] = [WIN_SIZE_X*0.05,
-                                      WIN_SIZE_Y*0.05,
-                                      WIN_SIZE_X*0.05 + TETRIS_ZONE_WIDTH,
-                                      WIN_SIZE_Y*0.05 + TETRIS_ZONE_HEIGHT];            // The play zone position
-pub const FALL_START_POS: [f64; 2] = [(TETRIS_ZONE_POS[2] - TETRIS_ZONE_POS[0])/2.0, TETRIS_ZONE_POS[1]];
+pub const ZONE_BLOCK_HEIGHT: usize = 20;    // How many blocks the zone height is
+pub const ZONE_BLOCK_WIDTH: usize = 10;     // How many blocks the zone width is
+pub const TETRIS_ZONE_POS: [usize; 4] = [2,
+                                      2,
+                                      2 + ZONE_BLOCK_WIDTH,
+                                      2 + ZONE_BLOCK_HEIGHT];            // The play zone position
+pub const NEXT_ZONE_POS: [usize; 4] = [13,
+                                       4,
+                                       19,
+                                       10];                              // The next tetrimino zone position
+pub const FALL_START_POS: [usize; 2] = [(TETRIS_ZONE_POS[2] - TETRIS_ZONE_POS[0])/2, TETRIS_ZONE_POS[1]+2];
 
 
 // Colours

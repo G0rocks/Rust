@@ -45,11 +45,9 @@ pub fn main() {
     let mut _my_level:u32 = 0;                                // What is the current level -> The level determines the fall speed of tetriminos
     let mut _my_lines:u16 = 0;                               // How many lines has the player made disappear
     let mut _enter_to_play_has_been_pressed:bool = false;    // Specifies whether the game has started or not
-    let tetris_zone_pos: [f64; 4] = constants::TETRIS_ZONE_POS; /*[constants::WIN_SIZE_X*0.05,
-                                    constants::WIN_SIZE_Y*0.05,
-                                    constants::WIN_SIZE_X*0.05 + constants::TETRIS_ZONE_WIDTH,
-                                    constants::WIN_SIZE_Y*0.05 + constants::TETRIS_ZONE_HEIGHT];            // The play zone position*/
-    let game_updates_per_sec:u64 = 24;                   // How many times per second the game should update
+    let tetris_zone_pos: [usize; 4] = constants::TETRIS_ZONE_POS; // The play zone position
+    let next_zone_pos: [usize; 4] = constants::NEXT_ZONE_POS; // The play zone position
+    let game_updates_per_sec:u64 = 38;                   // How many times per second the game should update
 
     println!("Variables declared");
 
@@ -88,7 +86,10 @@ pub fn main() {
     // Add a (full program) loop which waits until enter is pressed to start the game and takes care of menus and such
 
     // Create tetrimino vecotr
-    let mut mino_vector: Vec<tetrimino::Mino> = Vec::new();
+    let mino_vector: Vec<tetrimino::Mino> = Vec::new();
+
+    // Creat zone array
+    let zone_array: [[i32; constants::GRID_BLOCK_SIZE_X]; constants::GRID_BLOCK_SIZE_Y] = [[0; constants::GRID_BLOCK_SIZE_X]; constants::GRID_BLOCK_SIZE_Y];
 
     // Create game
     let mut current_game = game::Game {
@@ -96,10 +97,12 @@ pub fn main() {
         minos: mino_vector,
         updates_per_second: game_updates_per_sec,
         fall_counter: 0,
-        fall_count_max: 12,
+        fall_count_max: 1,
         audio_on: true,
         game_over: false,
         zone_pos: tetris_zone_pos,
+        next_pos: next_zone_pos,
+        game_zone: zone_array,
     };
 
     // Firstly we need a new tetrimino, so we add a new one
@@ -120,6 +123,11 @@ pub fn main() {
         // Setjum tetrimino inn í skjáinn einn í einu
         if let Some(u) = e.update_args() {
             current_game.update();
+        }
+
+        // If the game is over, exit the loop
+        if current_game.game_over {
+            break;
         }
     }
 

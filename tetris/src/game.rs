@@ -7,6 +7,11 @@ Contains the struct and implementation of the game itself
 use piston::input::*;       // Used to get the render input from user
 use crate::tetrimino;       // Tetriminos are used in the game
 use crate::constants;       // For the colours
+use colored::*;           // For coloring the terminal output
+
+// Mayhaps not used?
+//use piston_window;        // Used for rendering text
+//use find_folder;          // For getting the font
 
 // Dependencies
 use opengl_graphics::GlGraphics;    //{GlGraphics, OpenGL};
@@ -21,7 +26,9 @@ pub struct Game {
   pub fall_count_max: u64,
   pub audio_on: bool,
   pub game_over: bool,
-  pub zone_pos: [f64; 4],   // [x1, y1, x2, y2] specifies the coordinates of the two corners of the play zone rectangle
+  pub zone_pos: [usize; 4],   // [x1, y1, x2, y2] specifies the coordinates of the two corners of the play zone rectangle in grid coordinates
+  pub next_pos: [usize; 4],   // [x1, y1, x2, y2] specifies the coordinates of the two corners of the next tetrimino rectangle in grid coordinates
+  pub game_zone: [[i32; constants::GRID_BLOCK_SIZE_X]; constants::GRID_BLOCK_SIZE_Y],    // [x][y] position in the grid of the game zone
 }
 
 
@@ -34,20 +41,27 @@ impl Game {
     });
 
     // Render outlines of tetrion
-    let tetrion_inner_square = graphics::rectangle::rectangle_by_corners(self.zone_pos[0],
-                                                                                  self.zone_pos[1],
-                                                                                  self.zone_pos[2],
-                                                                                  self.zone_pos[3]);  // self.zone_width as f64, self.zone_height as f64);
-    let tetrion_outer_square = graphics::rectangle::rectangle_by_corners(self.zone_pos[0] - constants::BORDER_THICKNESS,
-                                                                                self.zone_pos[1] - constants::BORDER_THICKNESS,
-                                                                                self.zone_pos[2] + constants::BORDER_THICKNESS,
-                                                                                self.zone_pos[3] + constants::BORDER_THICKNESS);
+    let tetrion_inner_square = graphics::rectangle::rectangle_by_corners((self.zone_pos[0] as f64)*constants::BLOCK_DIM,
+                                                                                 (self.zone_pos[1] as f64)*constants::BLOCK_DIM,
+                                                                                 (self.zone_pos[2] as f64)*constants::BLOCK_DIM,
+                                                                                 (self.zone_pos[3] as f64)*constants::BLOCK_DIM);  // self.zone_width as f64, self.zone_height as f64);
+    let tetrion_outer_square = graphics::rectangle::rectangle_by_corners((self.zone_pos[0] as f64)*constants::BLOCK_DIM - constants::BORDER_THICKNESS,
+                                                                                 (self.zone_pos[1] as f64)*constants::BLOCK_DIM - constants::BORDER_THICKNESS,
+                                                                                 (self.zone_pos[2] as f64)*constants::BLOCK_DIM + constants::BORDER_THICKNESS,
+                                                                                 (self.zone_pos[3] as f64)*constants::BLOCK_DIM + constants::BORDER_THICKNESS);
+
+    // Next mino square
+    let next_mino_inner_square = graphics::rectangle::rectangle_by_corners((self.next_pos[0] as f64)*constants::BLOCK_DIM,
+                                                                            (self.next_pos[1] as f64)*constants::BLOCK_DIM,
+                                                                            (self.next_pos[2] as f64)*constants::BLOCK_DIM,
+                                                                            (self.next_pos[3] as f64)*constants::BLOCK_DIM);
+    let next_mino_outer_square = graphics::rectangle::rectangle_by_corners((self.next_pos[0] as f64)*constants::BLOCK_DIM - constants::BORDER_THICKNESS,
+                                                                            (self.next_pos[1] as f64)*constants::BLOCK_DIM - constants::BORDER_THICKNESS,
+                                                                            (self.next_pos[2] as f64)*constants::BLOCK_DIM + constants::BORDER_THICKNESS,
+                                                                            (self.next_pos[3] as f64)*constants::BLOCK_DIM + constants::BORDER_THICKNESS);
 
     // Render score, level and such
-    let next_mino_inner_square = graphics::rectangle::rectangle_by_corners(constants::WIN_SIZE_X*0.6, constants::WIN_SIZE_Y*0.1, constants::WIN_SIZE_X*0.8, constants::WIN_SIZE_Y*0.3);
-    let next_mino_outer_square = graphics::rectangle::rectangle_by_corners(constants::WIN_SIZE_X*0.6 - constants::BORDER_THICKNESS, constants::WIN_SIZE_Y*0.1 - constants::BORDER_THICKNESS, constants::WIN_SIZE_X*0.8 + constants::BORDER_THICKNESS, constants::WIN_SIZE_Y*0.3 + constants::BORDER_THICKNESS);
     //let score_text = "Score: ";
-    //let score_render = graphics::text(constants::WHITE, constants::FONT_SIZE, &score_text, cache: &mut C, transform: math::Matrix2d, g: &mut G)
 
     // Implement the renders so far
     self.gl.draw(arg.viewport(), |c,gl|{
@@ -57,12 +71,23 @@ impl Game {
       graphics::rectangle(constants::BLACK, tetrion_inner_square, transform, gl);
       graphics::rectangle(constants::WHITE, next_mino_outer_square, transform, gl);
       graphics::rectangle(constants::BLACK, next_mino_inner_square, transform, gl);
+      //piston_window::text(constants::WHITE, constants::FONT_SIZE, &score_text, c, transform, gl);
     });
 
 
     // Teiknum leiðbeiningar fyrir neðan tetris zone-ið
 
     // Sínum á hvaða borði (e. level) leikmaðurinn er
+    //let assets = find_folder::Search::ParentsThenKids(3, 3)
+        //.for_folder("assets").unwrap();
+    //let ref font = assets.join(constants::FONT_NAME);
+    //let mut glyphs = Glyphs::new(font, factory).unwrap();
+    //text::Text::new_color([0.0, 0.0, 0.0, 1.0], 32).draw(
+      //"level",
+      //&mut glyphs,
+      //&c.draw_state,
+     // transform, g
+    //);
 
     // Sínum fjölda lína sem leikmaðurinn hefur tekist að láta hverfa
 
@@ -94,9 +119,10 @@ impl Game {
     //println!("Updating game, minos.len: {}", self.minos.len());
     let mut next_counter : u32 = 0;   // Counts the number of minos in the tetrimino::MinoState::Next state
     if self.fall_counter == 0 {
+      // Loop through each tetrimino. Update each tetrimino, the state, rotation and position of the tetrimino
       for i in 0..self.minos.len() {
         self.minos[i].update(); // Start by updating the mino
-        // Update each tetrimino, the state, rotation and position of the tetrimino
+
         //println!("Mino {} pos: x: {}, y: {}", i, self.minos[i].pos_x, self.minos[i].pos_y);
         //println!("Mino.last_state is {:?}", self.minos[i].last_state);
         match self.minos[i].state {
@@ -105,6 +131,13 @@ impl Game {
             match self.minos[i].last_state {
               tetrimino::MinoState::Next => {
                 self.minos[i].set_fall_start_pos();
+
+                // If there is a block in line 3 (counted from the top), start two blocks higher than normally
+                for x in 0..self.game_zone[0].len() {
+                  if self.game_zone[constants::TETRIS_ZONE_POS[1] + 4][x] != 0 && self.game_zone[constants::TETRIS_ZONE_POS[1] + 2][x] != -1 {
+                    self.minos[i].pos_y = self.minos[i].pos_y - 2;
+                  }
+                }
               }
               _=> {
               // Do nothing
@@ -112,17 +145,23 @@ impl Game {
             }
             // Check if mino can keep falling
             // Check if the mino is on top of another mino
+            for mut block in 0..self.minos[i].blocks.len() {
+              let mino_below_value = self.game_zone[self.minos[i].blocks[block].pos_x][self.minos[i].blocks[block].pos_y + 2];
+              if mino_below_value != 0 && mino_below_value != (i as i32 + 1) {
+                self.minos[i].set_state(tetrimino::MinoState::Still);
+                block = self.minos[i].blocks.len();
+              }
+            }
 
             // Check if the mino is at the bottom
-            if self.minos[i].pos_y >= (self.zone_pos[3] - constants::BLOCK_DIM) {
+            if self.minos[i].pos_y >= (self.zone_pos[3] - 1) {
               self.minos[i].set_state(tetrimino::MinoState::Still);
             }
 
-            // If mino can keep falling, make it continue
-
             // If mino can't keep falling, set state to still and perform game over check
-            self.minos[i].pos_x = self.minos[i].pos_x - 0.0;
-            self.minos[i].pos_y = self.minos[i].pos_y + constants::BLOCK_DIM;
+
+            // If mino can keep falling, make it continue. Make no change to x position -> self.minos[i].pos_x = self.minos[i].pos_x;
+            self.minos[i].pos_y = self.minos[i].pos_y + 1; // Move down 1 block
           },
           tetrimino::MinoState::Next => {
             next_counter = next_counter + 1;
@@ -158,13 +197,18 @@ impl Game {
           },
           tetrimino::MinoState::Still => {
             // Perform game over check
+            for block in 0..self.minos[i].blocks.len() {
+              if self.minos[i].blocks[block].pos_y <= constants::TETRIS_ZONE_POS[1] {
+                println!("{}", "GAME OVER!!!".red());
+                self.game_over = true;
+              }
+            }
           }
         }
-  
-        //Here we need to move all the tetriminos like they're supposed to move or 
-    
-        // Látum tetrimino-ana detta, einn í einu, rólega niður
-    
+
+        // Update the game zone for this mino
+        self.update_game_zone(self.minos[i].clone(), (i+1) as i32);
+
         // Snúum tetrimino-inum þegar leikmaðurinn ýtir á upp örina
         // Færum tetrimino-inn til hægri/vinstri þegar leikmaðurinn ýtir á hægri/vinstri örvatakkana
     
@@ -180,8 +224,16 @@ impl Game {
         // Láta tetrimino-a stoppa þegar þeir rekast á annan tetrimino fyrir neðan sig
         // Setja næsta tetrimino af stað þegar núverandi tetrimino stoppar
         // Láta leikinn enda þegar tetrimino er stoppar og er fyrir ofan toppinn á skjánum
-        // Þegar leikurinn endar --> Sýna "GAME OVER" og stig leikmanns  
+        // Þegar leikurinn endar --> Sýna "GAME OVER" og stig leikmanns
+
+
       }
+
+      // print game zone
+      //self.print_game_zone();
+
+      // Reinitialize game zone
+      self.reinitialize_game_zone();
 
       // Add new mino if there is no mino with the tetrimino::MinoState::Next state
       if next_counter == 0 {
@@ -217,5 +269,54 @@ impl Game {
     }
   }
   */
+
+  // Reinitializes the game zone
+  fn reinitialize_game_zone(&mut self) {
+    let (zone_x_min, zone_x_max, zone_y_min, zone_y_max) = ((constants::TETRIS_ZONE_POS[0] as i32-1) as usize, constants::TETRIS_ZONE_POS[2], constants::TETRIS_ZONE_POS[1], constants::TETRIS_ZONE_POS[3]+1);
+    let (next_zone_x_min, next_zone_x_max, next_zone_y_min, next_zone_y_max) = ((constants::NEXT_ZONE_POS[0] as i32-1) as usize, constants::NEXT_ZONE_POS[2], constants::NEXT_ZONE_POS[1], constants::NEXT_ZONE_POS[3]+1);
+    self.game_zone = [[0; constants::GRID_BLOCK_SIZE_X]; constants::GRID_BLOCK_SIZE_Y];
+    for x in 0..self.game_zone.len() {  //y coord
+      for y in 0..self.game_zone[x].len() {  // x coord
+        if ((x >= zone_x_min && x <= zone_x_max) && y == zone_y_min) || ((x >= zone_x_min && x <= zone_x_max) && y == zone_y_max) || ((y >= zone_y_min && y <= zone_y_max) && x == zone_x_min) || ((y >= zone_y_min && y <= zone_y_max) && x == zone_x_max) {
+          self.game_zone[x][y] = -1;
+        }
+        if ((x >= next_zone_x_min && x <= next_zone_x_max) && y == next_zone_y_min) || ((x >= next_zone_x_min && x <= next_zone_x_max) && y == next_zone_y_max) || ((y >= next_zone_y_min && y <= next_zone_y_max) && x == next_zone_x_min) || ((y >= next_zone_y_min && y <= next_zone_y_max) && x == next_zone_x_max) {
+          self.game_zone[x][y] = -1;
+        }
+      }
+    }
+  }
+
+  // Updates the game zone by placing the game_zone_pos given in the game zone
+  fn update_game_zone(&mut self, mino: tetrimino::Mino, index: i32) {
+    //println!("Updating game zone for mino {}", index.to_string().on_blue());
+    self.game_zone[mino.blocks[0].pos_x][mino.blocks[0].pos_y] = index; // Block 1
+    self.game_zone[mino.blocks[1].pos_x][mino.blocks[1].pos_y] = index; // Block 2
+    self.game_zone[mino.blocks[2].pos_x][mino.blocks[2].pos_y] = index; // Block 3
+    self.game_zone[mino.blocks[3].pos_x][mino.blocks[3].pos_y] = index; // Block 4
+  }
+
+  // prints the game zone to the terminal
+  fn print_game_zone(&self) {
+    println!("Game_zone, size: {}, {}, zone:", self.game_zone[1].len(), self.game_zone.len());
+    for x in 0..self.game_zone[0].len() {
+      for y in 0..self.game_zone.len() {
+        if self.game_zone[y][x] == -1 {
+          print!("{} ", "#".green());
+        }
+        else {
+          if self.game_zone[y][x] != 0 {
+            print!("{} ", self.game_zone[y][x].to_string().red());
+          }
+          else {
+            print!("{} ", self.game_zone[y][x]);
+          }
+        }
+      }
+      print!("\n");
+    }
+    println!("");
+  }
+
 }
   

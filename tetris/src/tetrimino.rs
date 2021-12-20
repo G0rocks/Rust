@@ -44,7 +44,6 @@ class tetrimino_I:
 extern crate opengl_graphics;
 
 // Dependencies
-use opengl_graphics::{GlGraphics, OpenGL};
 use piston::input::*;       // Used to get the render input from user
 use rand::{distributions::{Distribution, Standard},Rng,};
 use crate::{block, constants};
@@ -52,13 +51,12 @@ use crate::{block, constants};
 
 // Defines the tetrimino structure
 pub struct Mino {
-    gl: GlGraphics,
     shape: MinoShape,
     color: [f32; 4],
-    blocks: [block::Block; 4],
-    pub pos_x: f64,
-    pub pos_y: f64,
-    block_offset: [[f64;2]; 4],
+    pub blocks: [block::Block; 4],
+    pub pos_x: usize,
+    pub pos_y: usize,
+    block_offset: [[i32;2]; 4],
     pub state: MinoState,
     pub last_state: MinoState
 }
@@ -69,17 +67,16 @@ impl Mino {
     pub fn new() -> Mino{
         let new_shape: MinoShape = rand::random();
         let new_color: [f32; 4] = get_color(&new_shape);
-        let x_pos: f64 = constants::WIN_SIZE_X*0.675;
-        let y_pos: f64 = constants::WIN_SIZE_Y*0.18;
-        let block_off: [[f64; 2]; 4] = get_block_offset(&new_shape);
+        let x_pos: usize = constants::NEXT_ZONE_POS[0] + 3;
+        let y_pos: usize = constants::NEXT_ZONE_POS[1] + 4;
+        let block_off: [[i32; 2]; 4] = get_block_offset(&new_shape);
         let new_mino: Mino = Mino {
-            gl: GlGraphics::new(OpenGL::V4_5),
             shape: new_shape,
             color: new_color,
-            blocks: [block::Block::new(new_color, x_pos + block_off[0][0], y_pos + block_off[0][1]),
-                     block::Block::new(new_color, x_pos + block_off[1][0], y_pos + block_off[1][1]),
-                     block::Block::new(new_color, x_pos + block_off[2][0], y_pos + block_off[2][1]),
-                     block::Block::new(new_color, x_pos + block_off[3][0], y_pos + block_off[3][1])],
+            blocks: [block::Block::new(new_color, (x_pos as i32 + block_off[0][0]) as usize, (y_pos as i32 + block_off[0][1]) as usize),
+                     block::Block::new(new_color, (x_pos as i32 + block_off[1][0]) as usize, (y_pos as i32 + block_off[1][1]) as usize),
+                     block::Block::new(new_color, (x_pos as i32 + block_off[2][0]) as usize, (y_pos as i32 + block_off[2][1]) as usize),
+                     block::Block::new(new_color, (x_pos as i32 + block_off[3][0]) as usize, (y_pos as i32 + block_off[3][1]) as usize)],
             pos_x: x_pos,
             pos_y: y_pos,
             block_offset: block_off,
@@ -123,8 +120,8 @@ impl Mino {
     // Update block positions
     pub fn update_block_pos(&mut self) {
         for i in 0..self.blocks.len() {
-            self.blocks[i].pos_x = self.pos_x + self.block_offset[i][0];
-            self.blocks[i].pos_y = self.pos_y + self.block_offset[i][1];
+            self.blocks[i].pos_x = (self.pos_x as i32 + self.block_offset[i][0]) as usize;
+            self.blocks[i].pos_y = (self.pos_y as i32 + self.block_offset[i][1]) as usize;
         }
     }
 }
@@ -134,13 +131,12 @@ impl Clone for Mino {
     fn clone (&self) -> Mino {
         //*self
         let clone_mino: Mino = Mino {
-            gl: GlGraphics::new(OpenGL::V4_5),
             shape: self.shape,
             color: self.color,
-            blocks: [block::Block::new(self.color, self.pos_x + self.block_offset[0][0], self.pos_y + self.block_offset[0][1]),
-                     block::Block::new(self.color, self.pos_x + self.block_offset[1][0], self.pos_y + self.block_offset[1][1]),
-                     block::Block::new(self.color, self.pos_x + self.block_offset[2][0], self.pos_y + self.block_offset[2][1]),
-                     block::Block::new(self.color, self.pos_x + self.block_offset[3][0], self.pos_y + self.block_offset[3][1])],
+            blocks: [block::Block::new(self.color, (self.pos_x as i32 + self.block_offset[0][0]) as usize, (self.pos_y as i32 + self.block_offset[0][1]) as usize),
+                     block::Block::new(self.color, (self.pos_x as i32 + self.block_offset[1][0]) as usize, (self.pos_y as i32 + self.block_offset[1][1]) as usize),
+                     block::Block::new(self.color, (self.pos_x as i32 + self.block_offset[2][0]) as usize, (self.pos_y as i32 + self.block_offset[2][1]) as usize),
+                     block::Block::new(self.color, (self.pos_x as i32 + self.block_offset[3][0]) as usize, (self.pos_y as i32 + self.block_offset[3][1]) as usize)],
             pos_x: self.pos_x,
             pos_y: self.pos_y,
             block_offset: self.block_offset,
@@ -164,37 +160,36 @@ fn get_color(shape_input: &MinoShape) -> [f32; 4] {
 }
 
 // Used to get a color for the tetrimino being generated. Colors tetrimino depending on shape. Source: https://tetris.fandom.com/wiki/Tetromino#I
-fn get_block_offset(shape_input: &MinoShape) -> [[f64;2]; 4] {
-    let block_dim:f64 = constants::BLOCK_DIM as f64;
+fn get_block_offset(shape_input: &MinoShape) -> [[i32;2]; 4] {
     match shape_input {
-        MinoShape::I => [[0.0,0.0],
-                         [0.0,-block_dim],
-                         [0.0,-block_dim*2.0],
-                         [0.0,-block_dim*3.0]],
-        MinoShape::O => [[0.0,0.0],
-                         [0.0,-block_dim],
-                         [-block_dim, 0.0],
-                         [-block_dim, -block_dim]],
-        MinoShape::T => [[0.0,0.0],
-                         [-block_dim, 0.0],
-                         [-block_dim, -block_dim],
-                         [-block_dim*2.0, 0.0]],
-        MinoShape::S => [[0.0,0.0],
-                        [-block_dim, 0.0],
-                        [-block_dim, -block_dim],
-                        [-block_dim*2.0, -block_dim]],
-        MinoShape::Z => [[0.0,0.0],
-                         [0.0,-block_dim],
-                         [-block_dim,-block_dim],
-                         [-block_dim,-block_dim*2.0]],
-        MinoShape::J => [[0.0,0.0],
-                         [0.0,-block_dim],
-                         [-block_dim, 0.0],
-                         [-block_dim*2.0, 0.0]],
-        MinoShape::L => [[0.0,0.0],
-                         [-block_dim, 0.0],
-                         [-block_dim*2.0, 0.0],
-                         [-block_dim*2.0, -block_dim]],
+        MinoShape::I => [[0,0],
+                         [1,0],
+                         [2,0],
+                         [3,0]],
+        MinoShape::O => [[0,0],
+                         [0,-1],
+                         [-1, 0],
+                         [-1, -1]],
+        MinoShape::T => [[0,0],
+                         [-1, 0],
+                         [-1, -1],
+                         [-2, 0]],
+        MinoShape::S => [[0,0],
+                        [-1, 0],
+                        [-1, -1],
+                        [-2, -1]],
+        MinoShape::Z => [[0,0],
+                         [0,-1],
+                         [-1,-1],
+                         [-1,-2]],
+        MinoShape::J => [[0,0],
+                         [0,-1],
+                         [-1, 0],
+                         [-2, 0]],
+        MinoShape::L => [[0,0],
+                         [-1, 0],
+                         [-2, 0],
+                         [-2, -1]],
     }
 }
 

@@ -5,6 +5,7 @@
 */
 
 //Function which returns false if the game is over and true if the game is still on
+/*
 pub fn game_is_on(top_line:u8, tetris_zone_height:u8) -> bool {
   println!("game_is_on_top function running");
   println!("{}", top_line);
@@ -16,3 +17,4 @@ pub fn game_is_on(top_line:u8, tetris_zone_height:u8) -> bool {
 
   return false;
 }
+*/
