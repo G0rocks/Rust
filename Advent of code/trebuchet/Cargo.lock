@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "i_like_i_dont_like"
+name = "trebuchet"
 version = "0.1.0"
